@@ -1,0 +1,141 @@
+/*
+* Conway's Game of Life in YOCO
+* by James Thornton
+*
+* This program will display a glider moving from the
+* top left to the bottom right
+* across a 5x5 board according to the rules
+* of Conway's Game of Life. To change the size
+* of the board, adjust the ROWSIZE variable and
+* the initialized size of the board array and nextgen. 
+* To change the number of generations, adjust the
+* NUMGEN variable and to change the starting pattern,
+* modify initBoard().
+*
+* Time to complete HW9 Part 1: 8 hours.
+*
+*/
+
+global int #ROWSIZE!
+global int #BOARDSIZE!
+global int #NUMGEN!
+
+global yono[0..25] #board!
+
+updateBoard ():
+	//make a new array to hold the next gen
+	int #neighborCount!
+	yono[0..25] #nextGen!
+	int #i!
+	int #j!
+	int #rowAbove!
+	int #thisRow!
+	int #rowBelow!
+
+	//copy board into #nextGen
+	#i @ 0! 
+	while #i < #BOARDSIZE:
+		#nextGen[#i] @ #board[#i]!
+		#i @ #i + 1!
+	end!
+	
+	#i @ 0! 
+	while #i < #BOARDSIZE:
+		//get the neighbor count
+		#neighborCount @ 0!
+		#j @ -1! 
+		while #j<=1:
+
+			#rowAbove @ #i - #ROWSIZE + #j!
+			if 0 <= #rowAbove and #rowAbove < #BOARDSIZE and #board[#rowAbove] like yo: 
+				#neighborCount @ #neighborCount + 1!
+			end!
+
+			#thisRow @ #i + #j!
+			if #j not like 0 and 0 < #thisRow and #thisRow < #BOARDSIZE and #board[#thisRow] like yo: 
+				#neighborCount @ #neighborCount + 1!
+			end!
+
+			#rowBelow @ #i + #ROWSIZE + #j!
+			if 0 < #rowBelow and #rowBelow < #BOARDSIZE and #board[#rowBelow] like yo: 
+				#neighborCount @ #neighborCount + 1!
+			end!
+
+			#j @ #j + 1!
+		end!
+		//update living cells
+		if #board[#i] like yo:
+			//update for rule 1
+			if #neighborCount < 2:
+				#nextGen[#i] @ no!
+			else if #neighborCount > 3:
+				//update for rule 3
+				#nextGen[#i] @ no!
+			end!
+		else if(#neighborCount like 3):
+			//update nonliving cells
+			//update for rule 4
+			#nextGen[#i] @ yo!
+		end!
+		#i @ #i + 1!
+	end!
+	//copy into global
+	#i @ 0! 
+	while #i < #BOARDSIZE:
+		#board[#i] @ #nextGen[#i]!
+		#i @ #i + 1!
+	end!
+end!
+
+printGeneration ():
+    //print board
+	int #i @ 0! 
+	while #i < #BOARDSIZE:
+		if #i % #ROWSIZE like 0: 
+			putc('\n')!
+		end!
+		if #board[#i] like yo:
+			putc('X')!
+		else: 
+			putc('_')!
+		end!
+		#i @ #i + 1!
+	end!
+end!
+
+initBoard():
+
+	//initialize the board to all 0s
+
+	int #i @ 0!
+	while #i < #BOARDSIZE:
+		#board[#i] @ no!
+	 	#i @ #i + 1!
+	end!
+
+	//create a glider with the topmost point at base 1
+
+	int #base @ 1!
+	#board[#base] @ yo!
+	#board[#base+#ROWSIZE + 1] @ yo!
+	#board[#base+2*#ROWSIZE -1] @ yo!
+	#board[#base+2*#ROWSIZE] @ yo!
+	#board[#base+2*#ROWSIZE + 1] @ yo!
+end!
+
+YOCO():
+	#ROWSIZE @ 5!
+	#BOARDSIZE @ #ROWSIZE * #ROWSIZE!
+	#NUMGEN @ 8!
+	initBoard()!
+	//print first gen
+	printGeneration()!
+	// for each gen, update and print
+	int #i @ 0! 
+	while #i < #NUMGEN:
+		putc('\n')!
+		updateBoard()!
+		printGeneration()!
+		#i @ #i + 1!
+	end!
+end!

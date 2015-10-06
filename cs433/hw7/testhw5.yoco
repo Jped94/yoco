@@ -1,0 +1,22 @@
+// testhw5.yoco - test program for hw 5
+global int #a, #b!
+
+int f(int #c):
+    put(#a)!
+    put(#b)!
+    p(#c)!       // test forward reference
+    retweet #c!
+end!
+
+p(ref int #b):
+    int #a @ 3!
+    put(#b)!
+    #b @ 5!
+end!
+    
+YOCO():
+    #a @ 2!
+    #b @ 3!
+    #b @ f(#a+2)!
+    put(#b)!
+end!

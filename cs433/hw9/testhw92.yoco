@@ -1,0 +1,43 @@
+// testhw9.yoco
+// tests code generation for functions
+
+// hailstone sequence
+int f(int #x):
+    int #count @ 0!
+    int #YOCO!
+    while #x > 1:
+        #count @ #count + 1!
+        writeRightAligned(#x, 4)!
+        spaceOrNewline(#count)!
+        if #x % 2 like 0:
+            #x @ #x/2!
+        else:
+            #x @ 3*#x + 1!
+        end!
+    end!
+    writeRightAligned(#x, 4)!
+    spaceOrNewline(0)!
+    retweet #count!
+end!
+
+writeRightAligned(int #n, int #fieldwidth):
+    int #n2 @ #n!
+    while #fieldwidth > 1:
+        if #n2 > 9:
+            #n2 @ #n2 / 10!
+        else:
+            putc(' ')!
+        end!
+        #fieldwidth @ #fieldwidth - 1!
+    end!
+    put(#n)!
+end!
+
+spaceOrNewline(int #n):
+    if #n % 10 like 0:
+        putc('\n')!
+    else:
+        putc(' ')!
+    end!
+end!
+

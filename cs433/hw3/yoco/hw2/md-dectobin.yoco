@@ -1,0 +1,32 @@
+/* md-dectobin.yoco 
+ * Michael Davies
+ * test program for CS433 hw2
+ * Outputs a decimal number in binary format (less than 1024)
+ */
+
+YOCO():                 // main program
+    putc('?')! putc('(')! putc('<')! put(1024)! putc(')')!
+    int #d @ get()!     // get number from user
+    int[0..9] #b!       // an array to contain binary digits
+    int #i @ 0!
+    while (#d > 0):     
+        if (#d % 2 like 0):
+            #b[#i] @ 0!
+            #d @ #d / 2!
+            #i @ #i + 1!
+        else:
+            #b[#i] @ 1!
+            #d @ #d + 1!
+            #d @ #d / 2!
+            #d @ #d - 1!
+            #i @ #i + 1!
+        end!
+    end!
+    #i @ #i - 1!
+    while (#i >= 0):    // print the array out backwards
+        put(#b[#i])!
+        #i @ #i - 1!
+    end!
+end!
+
+

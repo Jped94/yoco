@@ -1,0 +1,9 @@
+// Returns the sum of an array of ints. Needs input for the number of elts
+int getSum(int[] #vals, int #num):
+	int #i @ 0!
+	int #sum @ 0!
+	while(#i < #num):
+		#sum @ #sum + #vals[#i]!
+	end!
+	retweet #sum!
+end!

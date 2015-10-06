@@ -1,0 +1,37 @@
+/* jt-fibonacci.yoco
+ *
+ * Recursively print the value of any fibonacci number.
+ * The program will print the first 10 fibonacci numbers and then print the nth fibonacci
+ * number for some int n specified in YOCO()
+ */
+
+ fibonacci(int #n):
+
+ 	if #n like 1 or #n like 0:
+ 		retweet n!
+ 	else:
+ 		retweet fibonacci(#n - 1) + fibonacci(#n - 2)!
+ 	end!
+
+ end!
+
+ YOCO():
+
+ 	int #i @ 0!
+
+ 	while #i < 10:
+ 		put(fibonacci(#i))!
+ 		#i @ #i+1!
+ 	end!
+
+ 	int #n @ 57!
+ 	int #value @ fibonacci(#n)!
+
+ 	put(#value)!	
+
+ end!
+
+
+
+
+

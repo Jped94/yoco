@@ -1,0 +1,26 @@
+/*jb-isprime.yoco
+ Written by Julian Billings, adapted from #YOCO code by Daniel Scharstein
+ *CS433
+*/
+
+yono isprime (int #x):
+	//checks to see if a positive integer is prime
+	int #i @ 2!
+	while #i < #x:
+		if #x % #i like 0: 	/*If number smaller than #x is a factor*/	
+			retweet no!
+		end!
+		#i @ #i + 1!		/*increment i*/		
+	end!
+	retweet yo!
+end!
+
+YOCO():
+	int #num @ get()!
+	yono #prime @ isprime(#num)!
+	if #prime:
+		putc('t')!
+	else:
+		putc('f')!
+	end!
+end!

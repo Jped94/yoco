@@ -1,0 +1,12 @@
+//yoco test for FILL IN FIRST stuff
+
+global int #x!
+
+int p(ref int #y):
+    #y @ 2!
+    yono #h @ yo!
+    #h @ yo!
+    #x @ 3!
+    #y @ -#x!
+    #y @ -4!
+end!

@@ -1,0 +1,73 @@
+#!/bin/csh -f
+
+if ($#argv > 0) then
+  echo "usage: runtest"
+  echo "runs 'yococo' on test suite of #YOCO programs and checks output"
+  echo ""
+  exit 1
+endif
+
+if (! -x ./yococo) then
+  echo "executable 'yococo' not found in current directory"
+  exit 1
+endif
+
+set filedir = ~schar/cs433/test-yoco
+
+@ n = 0
+@ c = 0
+@ a = 0
+@ g = 0
+
+rm -f core.*
+foreach f ( $filedir/*.yoco )
+    @ n = $n + 1
+    set b = `basename $f .yoco`
+    echo ======================================================== $b.yoco
+    rm -f yococotest.s yococotest
+    echo ./yococo $f yococotest.s
+    ./yococo $f yococotest.s
+    touch core.xxx
+    set cores = (core.*)
+    if ($#cores > 1) then
+        echo CORE DUMP
+	rm -f yococotest.s
+    endif
+    rm $cores
+    if ( -e yococotest.s ) then
+        @ c = $c + 1
+	echo gcc -m32 -o yococotest yococotest.s
+	gcc -m32 -o yococotest yococotest.s
+	if ( -e yococotest ) then
+	    @ a = $a + 1
+	    echo './yococotest > yococotest.output'
+	    ./yococotest > yococotest.output
+            touch core.xxx
+	    set cores = (core.*)
+	    if ($#cores > 1) then
+		echo "************************** core dump ***"
+		rm -f yococotest.output
+	    else
+		if { diff -qs yococotest.output $filedir/$b.output } then
+		    @ g = $g + 1
+		else
+		    echo "************************** wrong output ***"
+		endif
+	    endif
+	    rm $cores
+	else
+	    echo "************************** didn't assemble ***"
+	endif
+    else
+	echo "************************** didn't compile ***"
+    endif
+end
+
+rm -f yococotest.s yococotest yococotest.output
+
+echo " "
+echo "======================="
+echo "compiled:  $c of $n"
+echo "assembled: $a of $n"
+echo "correct:   $g of $n"
+echo "======================="

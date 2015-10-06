@@ -1,0 +1,20 @@
+/*
+ * Ruben Gilbert
+ * cs433 hw2
+ * rg-circlearea.yoco
+ *
+ * test #YOCO function that computes the area of a circle
+ *
+ */
+
+int c_area(int #radius):
+	int #area @ (#radius * #radius) * (22 / 7)!
+	retweet #area!
+end!
+
+YOCO():
+	putc('?')!
+	int #r @ get()! // get radius from user
+	put(c_area(#r))!
+	putc('\n')!
+end!

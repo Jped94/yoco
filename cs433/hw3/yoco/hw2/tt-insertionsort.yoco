@@ -1,0 +1,26 @@
+/*** Trevor Truog
+ * tt-insertionsort.yoco
+ * Assignment 1
+ ***/
+
+swap(ref int #a, ref int #b): // swaps #a and #b, which are passed by reference
+    int #tmp @ #a!
+    #a @ #b!
+    #b @ #tmp!
+end!
+
+insertion_sort(int[] #X, int #lo, int #hi): // sorts #X[#lo..#hi] using insertion sort
+
+	int #i @ #lo!
+	while #i < #hi:
+		int #j @ #i!
+		while #j > 0 and #X[#j-1] > #X[#j]:
+			swap(#X[#j], #X[#j-1])!
+			#j @ #j - 1!
+		end!
+	end!
+end!
+
+
+
+	

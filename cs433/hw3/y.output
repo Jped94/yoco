@@ -1,0 +1,1816 @@
+   0  $accept : program $end
+
+   1  program : globlist funlist
+
+   2  globlist :
+   3           | globlist GLOBAL vardecl
+
+   4  vardecl : type decllist BANG
+
+   5  type : basictype
+   6       | basictype LBRACK sconst DOTDOT sconst RBRACK
+
+   7  basictype : INT
+   8            | YONO
+
+   9  sconst : CONST
+  10         | MINUS CONST
+
+  11  decllist : decl
+  12           | decllist COMMA decl
+
+  13  decl : HASH ID
+  14       | HASH ID ASSIGN expr
+
+  15  funlist :
+  16          | funlist fundecl
+
+  17  fundecl : ID LPAREN params RPAREN COLON stmtlist END BANG
+  18          | basictype ID LPAREN params RPAREN COLON stmtlist END BANG
+
+  19  params :
+  20         | paramlist
+
+  21  paramlist : param
+  22            | paramlist COMMA param
+
+  23  param : basictype HASH ID
+  24        | REF basictype HASH ID
+  25        | basictype LBRACK RBRACK HASH ID
+
+  26  stmtlist :
+  27           | stmtlist stmt
+
+  28  stmt : vardecl
+  29       | assignment
+  30       | funcall BANG
+  31       | retstmt
+  32       | ifstmt
+  33       | whilestmt
+
+  34  assignment : variable ASSIGN expr BANG
+
+  35  variable : HASH ID
+  36           | HASH ID LBRACK expr RBRACK
+
+  37  funcall : ID LPAREN RPAREN
+  38          | ID LPAREN exprlist RPAREN
+
+  39  retstmt : RETWEET BANG
+  40          | RETWEET expr BANG
+
+  41  ifstmt : IF expr COLON stmtlist elsestmt END BANG
+
+  42  elsestmt :
+  43           | ELSE IF expr COLON stmtlist elsestmt
+  44           | ELSE COLON stmtlist
+
+  45  whilestmt : WHILE expr COLON stmtlist END BANG
+
+  46  exprlist : expr
+  47           | exprlist COMMA expr
+
+  48  expr : logterm
+  49       | expr OR logterm
+
+  50  logterm : logfactor
+  51          | logterm AND logfactor
+
+  52  logfactor : relexpr
+  53            | NOT relexpr
+
+  54  relexpr : arithexpr
+  55          | arithexpr LT arithexpr
+  56          | arithexpr LE arithexpr
+  57          | arithexpr GT arithexpr
+  58          | arithexpr GE arithexpr
+  59          | arithexpr LIKE arithexpr
+  60          | arithexpr NOT LIKE arithexpr
+
+  61  arithexpr : term
+  62            | arithexpr PLUS term
+  63            | arithexpr MINUS term
+
+  64  term : factor
+  65       | term MULT factor
+  66       | term DIV factor
+  67       | term MOD factor
+
+  68  factor : MINUS factor
+  69         | variable
+  70         | funcall
+  71         | CONST
+  72         | LPAREN expr RPAREN
+
+state 0
+	$accept : . program $end  (0)
+	globlist : .  (2)
+
+	.  reduce 2
+
+	program  goto 1
+	globlist  goto 2
+
+
+state 1
+	$accept : program . $end  (0)
+
+	$end  accept
+
+
+state 2
+	program : globlist . funlist  (1)
+	globlist : globlist . GLOBAL vardecl  (3)
+	funlist : .  (15)
+
+	GLOBAL  shift 3
+	$end  reduce 15
+	ID  reduce 15
+	INT  reduce 15
+	YONO  reduce 15
+
+	funlist  goto 4
+
+
+state 3
+	globlist : globlist GLOBAL . vardecl  (3)
+
+	INT  shift 5
+	YONO  shift 6
+	.  error
+
+	vardecl  goto 7
+	type  goto 8
+	basictype  goto 9
+
+
+state 4
+	program : globlist funlist .  (1)
+	funlist : funlist . fundecl  (16)
+
+	ID  shift 10
+	INT  shift 5
+	YONO  shift 6
+	$end  reduce 1
+
+	basictype  goto 11
+	fundecl  goto 12
+
+
+state 5
+	basictype : INT .  (7)
+
+	.  reduce 7
+
+
+state 6
+	basictype : YONO .  (8)
+
+	.  reduce 8
+
+
+state 7
+	globlist : globlist GLOBAL vardecl .  (3)
+
+	.  reduce 3
+
+
+state 8
+	vardecl : type . decllist BANG  (4)
+
+	HASH  shift 13
+	.  error
+
+	decllist  goto 14
+	decl  goto 15
+
+
+state 9
+	type : basictype .  (5)
+	type : basictype . LBRACK sconst DOTDOT sconst RBRACK  (6)
+
+	LBRACK  shift 16
+	HASH  reduce 5
+
+
+state 10
+	fundecl : ID . LPAREN params RPAREN COLON stmtlist END BANG  (17)
+
+	LPAREN  shift 17
+	.  error
+
+
+state 11
+	fundecl : basictype . ID LPAREN params RPAREN COLON stmtlist END BANG  (18)
+
+	ID  shift 18
+	.  error
+
+
+state 12
+	funlist : funlist fundecl .  (16)
+
+	.  reduce 16
+
+
+state 13
+	decl : HASH . ID  (13)
+	decl : HASH . ID ASSIGN expr  (14)
+
+	ID  shift 19
+	.  error
+
+
+state 14
+	vardecl : type decllist . BANG  (4)
+	decllist : decllist . COMMA decl  (12)
+
+	BANG  shift 20
+	COMMA  shift 21
+	.  error
+
+
+state 15
+	decllist : decl .  (11)
+
+	.  reduce 11
+
+
+state 16
+	type : basictype LBRACK . sconst DOTDOT sconst RBRACK  (6)
+
+	CONST  shift 22
+	MINUS  shift 23
+	.  error
+
+	sconst  goto 24
+
+
+state 17
+	fundecl : ID LPAREN . params RPAREN COLON stmtlist END BANG  (17)
+	params : .  (19)
+
+	INT  shift 5
+	YONO  shift 6
+	REF  shift 25
+	RPAREN  reduce 19
+
+	basictype  goto 26
+	params  goto 27
+	paramlist  goto 28
+	param  goto 29
+
+
+state 18
+	fundecl : basictype ID . LPAREN params RPAREN COLON stmtlist END BANG  (18)
+
+	LPAREN  shift 30
+	.  error
+
+
+state 19
+	decl : HASH ID .  (13)
+	decl : HASH ID . ASSIGN expr  (14)
+
+	ASSIGN  shift 31
+	BANG  reduce 13
+	COMMA  reduce 13
+
+
+state 20
+	vardecl : type decllist BANG .  (4)
+
+	.  reduce 4
+
+
+state 21
+	decllist : decllist COMMA . decl  (12)
+
+	HASH  shift 13
+	.  error
+
+	decl  goto 32
+
+
+state 22
+	sconst : CONST .  (9)
+
+	.  reduce 9
+
+
+state 23
+	sconst : MINUS . CONST  (10)
+
+	CONST  shift 33
+	.  error
+
+
+state 24
+	type : basictype LBRACK sconst . DOTDOT sconst RBRACK  (6)
+
+	DOTDOT  shift 34
+	.  error
+
+
+state 25
+	param : REF . basictype HASH ID  (24)
+
+	INT  shift 5
+	YONO  shift 6
+	.  error
+
+	basictype  goto 35
+
+
+state 26
+	param : basictype . HASH ID  (23)
+	param : basictype . LBRACK RBRACK HASH ID  (25)
+
+	HASH  shift 36
+	LBRACK  shift 37
+	.  error
+
+
+state 27
+	fundecl : ID LPAREN params . RPAREN COLON stmtlist END BANG  (17)
+
+	RPAREN  shift 38
+	.  error
+
+
+state 28
+	params : paramlist .  (20)
+	paramlist : paramlist . COMMA param  (22)
+
+	COMMA  shift 39
+	RPAREN  reduce 20
+
+
+state 29
+	paramlist : param .  (21)
+
+	.  reduce 21
+
+
+state 30
+	fundecl : basictype ID LPAREN . params RPAREN COLON stmtlist END BANG  (18)
+	params : .  (19)
+
+	INT  shift 5
+	YONO  shift 6
+	REF  shift 25
+	RPAREN  reduce 19
+
+	basictype  goto 26
+	params  goto 40
+	paramlist  goto 28
+	param  goto 29
+
+
+state 31
+	decl : HASH ID ASSIGN . expr  (14)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 49
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 32
+	decllist : decllist COMMA decl .  (12)
+
+	.  reduce 12
+
+
+state 33
+	sconst : MINUS CONST .  (10)
+
+	.  reduce 10
+
+
+state 34
+	type : basictype LBRACK sconst DOTDOT . sconst RBRACK  (6)
+
+	CONST  shift 22
+	MINUS  shift 23
+	.  error
+
+	sconst  goto 56
+
+
+state 35
+	param : REF basictype . HASH ID  (24)
+
+	HASH  shift 57
+	.  error
+
+
+state 36
+	param : basictype HASH . ID  (23)
+
+	ID  shift 58
+	.  error
+
+
+state 37
+	param : basictype LBRACK . RBRACK HASH ID  (25)
+
+	RBRACK  shift 59
+	.  error
+
+
+state 38
+	fundecl : ID LPAREN params RPAREN . COLON stmtlist END BANG  (17)
+
+	COLON  shift 60
+	.  error
+
+
+state 39
+	paramlist : paramlist COMMA . param  (22)
+
+	INT  shift 5
+	YONO  shift 6
+	REF  shift 25
+	.  error
+
+	basictype  goto 26
+	param  goto 61
+
+
+state 40
+	fundecl : basictype ID LPAREN params . RPAREN COLON stmtlist END BANG  (18)
+
+	RPAREN  shift 62
+	.  error
+
+
+state 41
+	funcall : ID . LPAREN RPAREN  (37)
+	funcall : ID . LPAREN exprlist RPAREN  (38)
+
+	LPAREN  shift 63
+	.  error
+
+
+state 42
+	factor : CONST .  (71)
+
+	.  reduce 71
+
+
+state 43
+	logfactor : NOT . relexpr  (53)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	relexpr  goto 64
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 44
+	variable : HASH . ID  (35)
+	variable : HASH . ID LBRACK expr RBRACK  (36)
+
+	ID  shift 65
+	.  error
+
+
+state 45
+	factor : MINUS . factor  (68)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	factor  goto 66
+
+
+state 46
+	factor : LPAREN . expr RPAREN  (72)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 67
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 47
+	factor : variable .  (69)
+
+	.  reduce 69
+
+
+state 48
+	factor : funcall .  (70)
+
+	.  reduce 70
+
+
+state 49
+	decl : HASH ID ASSIGN expr .  (14)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	BANG  reduce 14
+	COMMA  reduce 14
+
+
+state 50
+	expr : logterm .  (48)
+	logterm : logterm . AND logfactor  (51)
+
+	AND  shift 69
+	OR  reduce 48
+	COLON  reduce 48
+	BANG  reduce 48
+	RPAREN  reduce 48
+	RBRACK  reduce 48
+	COMMA  reduce 48
+
+
+state 51
+	logterm : logfactor .  (50)
+
+	.  reduce 50
+
+
+state 52
+	logfactor : relexpr .  (52)
+
+	.  reduce 52
+
+
+state 53
+	relexpr : arithexpr .  (54)
+	relexpr : arithexpr . LT arithexpr  (55)
+	relexpr : arithexpr . LE arithexpr  (56)
+	relexpr : arithexpr . GT arithexpr  (57)
+	relexpr : arithexpr . GE arithexpr  (58)
+	relexpr : arithexpr . LIKE arithexpr  (59)
+	relexpr : arithexpr . NOT LIKE arithexpr  (60)
+	arithexpr : arithexpr . PLUS term  (62)
+	arithexpr : arithexpr . MINUS term  (63)
+
+	NOT  shift 70
+	LIKE  shift 71
+	LT  shift 72
+	LE  shift 73
+	GT  shift 74
+	GE  shift 75
+	PLUS  shift 76
+	MINUS  shift 77
+	OR  reduce 54
+	AND  reduce 54
+	COLON  reduce 54
+	BANG  reduce 54
+	RPAREN  reduce 54
+	RBRACK  reduce 54
+	COMMA  reduce 54
+
+
+state 54
+	arithexpr : term .  (61)
+	term : term . MULT factor  (65)
+	term : term . DIV factor  (66)
+	term : term . MOD factor  (67)
+
+	MULT  shift 78
+	DIV  shift 79
+	MOD  shift 80
+	OR  reduce 61
+	AND  reduce 61
+	NOT  reduce 61
+	LIKE  reduce 61
+	LT  reduce 61
+	LE  reduce 61
+	GT  reduce 61
+	GE  reduce 61
+	PLUS  reduce 61
+	MINUS  reduce 61
+	COLON  reduce 61
+	BANG  reduce 61
+	RPAREN  reduce 61
+	RBRACK  reduce 61
+	COMMA  reduce 61
+
+
+state 55
+	term : factor .  (64)
+
+	.  reduce 64
+
+
+state 56
+	type : basictype LBRACK sconst DOTDOT sconst . RBRACK  (6)
+
+	RBRACK  shift 81
+	.  error
+
+
+state 57
+	param : REF basictype HASH . ID  (24)
+
+	ID  shift 82
+	.  error
+
+
+state 58
+	param : basictype HASH ID .  (23)
+
+	.  reduce 23
+
+
+state 59
+	param : basictype LBRACK RBRACK . HASH ID  (25)
+
+	HASH  shift 83
+	.  error
+
+
+state 60
+	fundecl : ID LPAREN params RPAREN COLON . stmtlist END BANG  (17)
+	stmtlist : .  (26)
+
+	.  reduce 26
+
+	stmtlist  goto 84
+
+
+state 61
+	paramlist : paramlist COMMA param .  (22)
+
+	.  reduce 22
+
+
+state 62
+	fundecl : basictype ID LPAREN params RPAREN . COLON stmtlist END BANG  (18)
+
+	COLON  shift 85
+	.  error
+
+
+state 63
+	funcall : ID LPAREN . RPAREN  (37)
+	funcall : ID LPAREN . exprlist RPAREN  (38)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	RPAREN  shift 86
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	exprlist  goto 87
+	expr  goto 88
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 64
+	logfactor : NOT relexpr .  (53)
+
+	.  reduce 53
+
+
+state 65
+	variable : HASH ID .  (35)
+	variable : HASH ID . LBRACK expr RBRACK  (36)
+
+	LBRACK  shift 89
+	OR  reduce 35
+	AND  reduce 35
+	NOT  reduce 35
+	LIKE  reduce 35
+	LT  reduce 35
+	LE  reduce 35
+	GT  reduce 35
+	GE  reduce 35
+	PLUS  reduce 35
+	MINUS  reduce 35
+	MULT  reduce 35
+	DIV  reduce 35
+	MOD  reduce 35
+	ASSIGN  reduce 35
+	COLON  reduce 35
+	BANG  reduce 35
+	RPAREN  reduce 35
+	RBRACK  reduce 35
+	COMMA  reduce 35
+
+
+state 66
+	factor : MINUS factor .  (68)
+
+	.  reduce 68
+
+
+state 67
+	expr : expr . OR logterm  (49)
+	factor : LPAREN expr . RPAREN  (72)
+
+	OR  shift 68
+	RPAREN  shift 90
+	.  error
+
+
+state 68
+	expr : expr OR . logterm  (49)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	logterm  goto 91
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 69
+	logterm : logterm AND . logfactor  (51)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	logfactor  goto 92
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 70
+	relexpr : arithexpr NOT . LIKE arithexpr  (60)
+
+	LIKE  shift 93
+	.  error
+
+
+state 71
+	relexpr : arithexpr LIKE . arithexpr  (59)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	arithexpr  goto 94
+	term  goto 54
+	factor  goto 55
+
+
+state 72
+	relexpr : arithexpr LT . arithexpr  (55)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	arithexpr  goto 95
+	term  goto 54
+	factor  goto 55
+
+
+state 73
+	relexpr : arithexpr LE . arithexpr  (56)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	arithexpr  goto 96
+	term  goto 54
+	factor  goto 55
+
+
+state 74
+	relexpr : arithexpr GT . arithexpr  (57)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	arithexpr  goto 97
+	term  goto 54
+	factor  goto 55
+
+
+state 75
+	relexpr : arithexpr GE . arithexpr  (58)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	arithexpr  goto 98
+	term  goto 54
+	factor  goto 55
+
+
+state 76
+	arithexpr : arithexpr PLUS . term  (62)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	term  goto 99
+	factor  goto 55
+
+
+state 77
+	arithexpr : arithexpr MINUS . term  (63)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	term  goto 100
+	factor  goto 55
+
+
+state 78
+	term : term MULT . factor  (65)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	factor  goto 101
+
+
+state 79
+	term : term DIV . factor  (66)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	factor  goto 102
+
+
+state 80
+	term : term MOD . factor  (67)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	factor  goto 103
+
+
+state 81
+	type : basictype LBRACK sconst DOTDOT sconst RBRACK .  (6)
+
+	.  reduce 6
+
+
+state 82
+	param : REF basictype HASH ID .  (24)
+
+	.  reduce 24
+
+
+state 83
+	param : basictype LBRACK RBRACK HASH . ID  (25)
+
+	ID  shift 104
+	.  error
+
+
+state 84
+	fundecl : ID LPAREN params RPAREN COLON stmtlist . END BANG  (17)
+	stmtlist : stmtlist . stmt  (27)
+
+	ID  shift 41
+	INT  shift 5
+	YONO  shift 6
+	RETWEET  shift 105
+	IF  shift 106
+	WHILE  shift 107
+	END  shift 108
+	HASH  shift 44
+	.  error
+
+	vardecl  goto 109
+	type  goto 8
+	basictype  goto 9
+	stmt  goto 110
+	assignment  goto 111
+	variable  goto 112
+	funcall  goto 113
+	retstmt  goto 114
+	ifstmt  goto 115
+	whilestmt  goto 116
+
+
+state 85
+	fundecl : basictype ID LPAREN params RPAREN COLON . stmtlist END BANG  (18)
+	stmtlist : .  (26)
+
+	.  reduce 26
+
+	stmtlist  goto 117
+
+
+state 86
+	funcall : ID LPAREN RPAREN .  (37)
+
+	.  reduce 37
+
+
+state 87
+	funcall : ID LPAREN exprlist . RPAREN  (38)
+	exprlist : exprlist . COMMA expr  (47)
+
+	RPAREN  shift 118
+	COMMA  shift 119
+	.  error
+
+
+state 88
+	exprlist : expr .  (46)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	RPAREN  reduce 46
+	COMMA  reduce 46
+
+
+state 89
+	variable : HASH ID LBRACK . expr RBRACK  (36)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 120
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 90
+	factor : LPAREN expr RPAREN .  (72)
+
+	.  reduce 72
+
+
+state 91
+	expr : expr OR logterm .  (49)
+	logterm : logterm . AND logfactor  (51)
+
+	AND  shift 69
+	OR  reduce 49
+	COLON  reduce 49
+	BANG  reduce 49
+	RPAREN  reduce 49
+	RBRACK  reduce 49
+	COMMA  reduce 49
+
+
+state 92
+	logterm : logterm AND logfactor .  (51)
+
+	.  reduce 51
+
+
+state 93
+	relexpr : arithexpr NOT LIKE . arithexpr  (60)
+
+	ID  shift 41
+	CONST  shift 42
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	arithexpr  goto 121
+	term  goto 54
+	factor  goto 55
+
+
+state 94
+	relexpr : arithexpr LIKE arithexpr .  (59)
+	arithexpr : arithexpr . PLUS term  (62)
+	arithexpr : arithexpr . MINUS term  (63)
+
+	PLUS  shift 76
+	MINUS  shift 77
+	OR  reduce 59
+	AND  reduce 59
+	COLON  reduce 59
+	BANG  reduce 59
+	RPAREN  reduce 59
+	RBRACK  reduce 59
+	COMMA  reduce 59
+
+
+state 95
+	relexpr : arithexpr LT arithexpr .  (55)
+	arithexpr : arithexpr . PLUS term  (62)
+	arithexpr : arithexpr . MINUS term  (63)
+
+	PLUS  shift 76
+	MINUS  shift 77
+	OR  reduce 55
+	AND  reduce 55
+	COLON  reduce 55
+	BANG  reduce 55
+	RPAREN  reduce 55
+	RBRACK  reduce 55
+	COMMA  reduce 55
+
+
+state 96
+	relexpr : arithexpr LE arithexpr .  (56)
+	arithexpr : arithexpr . PLUS term  (62)
+	arithexpr : arithexpr . MINUS term  (63)
+
+	PLUS  shift 76
+	MINUS  shift 77
+	OR  reduce 56
+	AND  reduce 56
+	COLON  reduce 56
+	BANG  reduce 56
+	RPAREN  reduce 56
+	RBRACK  reduce 56
+	COMMA  reduce 56
+
+
+state 97
+	relexpr : arithexpr GT arithexpr .  (57)
+	arithexpr : arithexpr . PLUS term  (62)
+	arithexpr : arithexpr . MINUS term  (63)
+
+	PLUS  shift 76
+	MINUS  shift 77
+	OR  reduce 57
+	AND  reduce 57
+	COLON  reduce 57
+	BANG  reduce 57
+	RPAREN  reduce 57
+	RBRACK  reduce 57
+	COMMA  reduce 57
+
+
+state 98
+	relexpr : arithexpr GE arithexpr .  (58)
+	arithexpr : arithexpr . PLUS term  (62)
+	arithexpr : arithexpr . MINUS term  (63)
+
+	PLUS  shift 76
+	MINUS  shift 77
+	OR  reduce 58
+	AND  reduce 58
+	COLON  reduce 58
+	BANG  reduce 58
+	RPAREN  reduce 58
+	RBRACK  reduce 58
+	COMMA  reduce 58
+
+
+state 99
+	arithexpr : arithexpr PLUS term .  (62)
+	term : term . MULT factor  (65)
+	term : term . DIV factor  (66)
+	term : term . MOD factor  (67)
+
+	MULT  shift 78
+	DIV  shift 79
+	MOD  shift 80
+	OR  reduce 62
+	AND  reduce 62
+	NOT  reduce 62
+	LIKE  reduce 62
+	LT  reduce 62
+	LE  reduce 62
+	GT  reduce 62
+	GE  reduce 62
+	PLUS  reduce 62
+	MINUS  reduce 62
+	COLON  reduce 62
+	BANG  reduce 62
+	RPAREN  reduce 62
+	RBRACK  reduce 62
+	COMMA  reduce 62
+
+
+state 100
+	arithexpr : arithexpr MINUS term .  (63)
+	term : term . MULT factor  (65)
+	term : term . DIV factor  (66)
+	term : term . MOD factor  (67)
+
+	MULT  shift 78
+	DIV  shift 79
+	MOD  shift 80
+	OR  reduce 63
+	AND  reduce 63
+	NOT  reduce 63
+	LIKE  reduce 63
+	LT  reduce 63
+	LE  reduce 63
+	GT  reduce 63
+	GE  reduce 63
+	PLUS  reduce 63
+	MINUS  reduce 63
+	COLON  reduce 63
+	BANG  reduce 63
+	RPAREN  reduce 63
+	RBRACK  reduce 63
+	COMMA  reduce 63
+
+
+state 101
+	term : term MULT factor .  (65)
+
+	.  reduce 65
+
+
+state 102
+	term : term DIV factor .  (66)
+
+	.  reduce 66
+
+
+state 103
+	term : term MOD factor .  (67)
+
+	.  reduce 67
+
+
+state 104
+	param : basictype LBRACK RBRACK HASH ID .  (25)
+
+	.  reduce 25
+
+
+state 105
+	retstmt : RETWEET . BANG  (39)
+	retstmt : RETWEET . expr BANG  (40)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	BANG  shift 122
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 123
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 106
+	ifstmt : IF . expr COLON stmtlist elsestmt END BANG  (41)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 124
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 107
+	whilestmt : WHILE . expr COLON stmtlist END BANG  (45)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 125
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 108
+	fundecl : ID LPAREN params RPAREN COLON stmtlist END . BANG  (17)
+
+	BANG  shift 126
+	.  error
+
+
+state 109
+	stmt : vardecl .  (28)
+
+	.  reduce 28
+
+
+state 110
+	stmtlist : stmtlist stmt .  (27)
+
+	.  reduce 27
+
+
+state 111
+	stmt : assignment .  (29)
+
+	.  reduce 29
+
+
+state 112
+	assignment : variable . ASSIGN expr BANG  (34)
+
+	ASSIGN  shift 127
+	.  error
+
+
+state 113
+	stmt : funcall . BANG  (30)
+
+	BANG  shift 128
+	.  error
+
+
+state 114
+	stmt : retstmt .  (31)
+
+	.  reduce 31
+
+
+state 115
+	stmt : ifstmt .  (32)
+
+	.  reduce 32
+
+
+state 116
+	stmt : whilestmt .  (33)
+
+	.  reduce 33
+
+
+state 117
+	fundecl : basictype ID LPAREN params RPAREN COLON stmtlist . END BANG  (18)
+	stmtlist : stmtlist . stmt  (27)
+
+	ID  shift 41
+	INT  shift 5
+	YONO  shift 6
+	RETWEET  shift 105
+	IF  shift 106
+	WHILE  shift 107
+	END  shift 129
+	HASH  shift 44
+	.  error
+
+	vardecl  goto 109
+	type  goto 8
+	basictype  goto 9
+	stmt  goto 110
+	assignment  goto 111
+	variable  goto 112
+	funcall  goto 113
+	retstmt  goto 114
+	ifstmt  goto 115
+	whilestmt  goto 116
+
+
+state 118
+	funcall : ID LPAREN exprlist RPAREN .  (38)
+
+	.  reduce 38
+
+
+state 119
+	exprlist : exprlist COMMA . expr  (47)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 130
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 120
+	variable : HASH ID LBRACK expr . RBRACK  (36)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	RBRACK  shift 131
+	.  error
+
+
+state 121
+	relexpr : arithexpr NOT LIKE arithexpr .  (60)
+	arithexpr : arithexpr . PLUS term  (62)
+	arithexpr : arithexpr . MINUS term  (63)
+
+	PLUS  shift 76
+	MINUS  shift 77
+	OR  reduce 60
+	AND  reduce 60
+	COLON  reduce 60
+	BANG  reduce 60
+	RPAREN  reduce 60
+	RBRACK  reduce 60
+	COMMA  reduce 60
+
+
+state 122
+	retstmt : RETWEET BANG .  (39)
+
+	.  reduce 39
+
+
+state 123
+	retstmt : RETWEET expr . BANG  (40)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	BANG  shift 132
+	.  error
+
+
+state 124
+	ifstmt : IF expr . COLON stmtlist elsestmt END BANG  (41)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	COLON  shift 133
+	.  error
+
+
+state 125
+	whilestmt : WHILE expr . COLON stmtlist END BANG  (45)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	COLON  shift 134
+	.  error
+
+
+state 126
+	fundecl : ID LPAREN params RPAREN COLON stmtlist END BANG .  (17)
+
+	.  reduce 17
+
+
+state 127
+	assignment : variable ASSIGN . expr BANG  (34)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 135
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 128
+	stmt : funcall BANG .  (30)
+
+	.  reduce 30
+
+
+state 129
+	fundecl : basictype ID LPAREN params RPAREN COLON stmtlist END . BANG  (18)
+
+	BANG  shift 136
+	.  error
+
+
+state 130
+	exprlist : exprlist COMMA expr .  (47)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	RPAREN  reduce 47
+	COMMA  reduce 47
+
+
+state 131
+	variable : HASH ID LBRACK expr RBRACK .  (36)
+
+	.  reduce 36
+
+
+state 132
+	retstmt : RETWEET expr BANG .  (40)
+
+	.  reduce 40
+
+
+state 133
+	ifstmt : IF expr COLON . stmtlist elsestmt END BANG  (41)
+	stmtlist : .  (26)
+
+	.  reduce 26
+
+	stmtlist  goto 137
+
+
+state 134
+	whilestmt : WHILE expr COLON . stmtlist END BANG  (45)
+	stmtlist : .  (26)
+
+	.  reduce 26
+
+	stmtlist  goto 138
+
+
+state 135
+	assignment : variable ASSIGN expr . BANG  (34)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	BANG  shift 139
+	.  error
+
+
+state 136
+	fundecl : basictype ID LPAREN params RPAREN COLON stmtlist END BANG .  (18)
+
+	.  reduce 18
+
+
+state 137
+	stmtlist : stmtlist . stmt  (27)
+	ifstmt : IF expr COLON stmtlist . elsestmt END BANG  (41)
+	elsestmt : .  (42)
+
+	ID  shift 41
+	INT  shift 5
+	YONO  shift 6
+	RETWEET  shift 105
+	IF  shift 106
+	ELSE  shift 140
+	WHILE  shift 107
+	HASH  shift 44
+	END  reduce 42
+
+	vardecl  goto 109
+	type  goto 8
+	basictype  goto 9
+	stmt  goto 110
+	assignment  goto 111
+	variable  goto 112
+	funcall  goto 113
+	retstmt  goto 114
+	ifstmt  goto 115
+	elsestmt  goto 141
+	whilestmt  goto 116
+
+
+state 138
+	stmtlist : stmtlist . stmt  (27)
+	whilestmt : WHILE expr COLON stmtlist . END BANG  (45)
+
+	ID  shift 41
+	INT  shift 5
+	YONO  shift 6
+	RETWEET  shift 105
+	IF  shift 106
+	WHILE  shift 107
+	END  shift 142
+	HASH  shift 44
+	.  error
+
+	vardecl  goto 109
+	type  goto 8
+	basictype  goto 9
+	stmt  goto 110
+	assignment  goto 111
+	variable  goto 112
+	funcall  goto 113
+	retstmt  goto 114
+	ifstmt  goto 115
+	whilestmt  goto 116
+
+
+state 139
+	assignment : variable ASSIGN expr BANG .  (34)
+
+	.  reduce 34
+
+
+state 140
+	elsestmt : ELSE . IF expr COLON stmtlist elsestmt  (43)
+	elsestmt : ELSE . COLON stmtlist  (44)
+
+	IF  shift 143
+	COLON  shift 144
+	.  error
+
+
+state 141
+	ifstmt : IF expr COLON stmtlist elsestmt . END BANG  (41)
+
+	END  shift 145
+	.  error
+
+
+state 142
+	whilestmt : WHILE expr COLON stmtlist END . BANG  (45)
+
+	BANG  shift 146
+	.  error
+
+
+state 143
+	elsestmt : ELSE IF . expr COLON stmtlist elsestmt  (43)
+
+	ID  shift 41
+	CONST  shift 42
+	NOT  shift 43
+	HASH  shift 44
+	MINUS  shift 45
+	LPAREN  shift 46
+	.  error
+
+	variable  goto 47
+	funcall  goto 48
+	expr  goto 147
+	logterm  goto 50
+	logfactor  goto 51
+	relexpr  goto 52
+	arithexpr  goto 53
+	term  goto 54
+	factor  goto 55
+
+
+state 144
+	elsestmt : ELSE COLON . stmtlist  (44)
+	stmtlist : .  (26)
+
+	.  reduce 26
+
+	stmtlist  goto 148
+
+
+state 145
+	ifstmt : IF expr COLON stmtlist elsestmt END . BANG  (41)
+
+	BANG  shift 149
+	.  error
+
+
+state 146
+	whilestmt : WHILE expr COLON stmtlist END BANG .  (45)
+
+	.  reduce 45
+
+
+state 147
+	elsestmt : ELSE IF expr . COLON stmtlist elsestmt  (43)
+	expr : expr . OR logterm  (49)
+
+	OR  shift 68
+	COLON  shift 150
+	.  error
+
+
+state 148
+	stmtlist : stmtlist . stmt  (27)
+	elsestmt : ELSE COLON stmtlist .  (44)
+
+	ID  shift 41
+	INT  shift 5
+	YONO  shift 6
+	RETWEET  shift 105
+	IF  shift 106
+	WHILE  shift 107
+	HASH  shift 44
+	END  reduce 44
+
+	vardecl  goto 109
+	type  goto 8
+	basictype  goto 9
+	stmt  goto 110
+	assignment  goto 111
+	variable  goto 112
+	funcall  goto 113
+	retstmt  goto 114
+	ifstmt  goto 115
+	whilestmt  goto 116
+
+
+state 149
+	ifstmt : IF expr COLON stmtlist elsestmt END BANG .  (41)
+
+	.  reduce 41
+
+
+state 150
+	elsestmt : ELSE IF expr COLON . stmtlist elsestmt  (43)
+	stmtlist : .  (26)
+
+	.  reduce 26
+
+	stmtlist  goto 151
+
+
+state 151
+	stmtlist : stmtlist . stmt  (27)
+	elsestmt : ELSE IF expr COLON stmtlist . elsestmt  (43)
+	elsestmt : .  (42)
+
+	ID  shift 41
+	INT  shift 5
+	YONO  shift 6
+	RETWEET  shift 105
+	IF  shift 106
+	ELSE  shift 140
+	WHILE  shift 107
+	HASH  shift 44
+	END  reduce 42
+
+	vardecl  goto 109
+	type  goto 8
+	basictype  goto 9
+	stmt  goto 110
+	assignment  goto 111
+	variable  goto 112
+	funcall  goto 113
+	retstmt  goto 114
+	ifstmt  goto 115
+	elsestmt  goto 152
+	whilestmt  goto 116
+
+
+state 152
+	elsestmt : ELSE IF expr COLON stmtlist elsestmt .  (43)
+
+	.  reduce 43
+
+
+36 terminals, 31 nonterminals
+73 grammar rules, 153 states

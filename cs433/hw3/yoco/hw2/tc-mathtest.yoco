@@ -1,0 +1,32 @@
+/* tc-mathtest.yoco
+*  Timothy Crocker Useful YOCO Program #1 (CS433 HW2)
+*  Administers a brief (one problem) math test.
+* 
+*  The math problem tests how both the user and the language
+*  handle operation precedence. 
+*/
+
+// Checks is the given answer is right. Returns 0 or 1. Not really needed, but tests functions with return type!
+int is_right(int #answer):
+	return (#answer like (3+5)*6%5)! //Answer = 3
+end!
+
+// Presents the math problem. Asks question (calls itself) until user gives right answer (3)
+startgame():
+	putc('(')!putc('3')!putc('+')!putc('5')!putc(')')!putc('*')!putc('6')!putc('%')!putc('5')!putc('=')!putc('?')!
+
+	#answer @ get()!
+
+	if is_right(#answer):
+		putc('G')!putc('o')!putc('o')!putc('d')!putc('!')!
+	else:
+		putc('N')!putc('o')!putc('.')!putc('\n')!
+		startgame()!
+	end!
+end!
+
+// Main function prints an introduction, starts game
+YOCO():
+	putc('M')!putc('a')!putc('t')!putc('h')!putc('T')!putc('e')!putc('s')!putc('t')!putc('\n')!
+	startgame()!
+end!

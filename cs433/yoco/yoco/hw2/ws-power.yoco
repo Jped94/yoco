@@ -1,0 +1,19 @@
+// ws-power.yoco
+
+/*compute the value of a raised to the pos. power b*/
+int pow(int #a, int #b):
+	int #i @ 0!
+	int #sum @ 1!
+	while #i < #b:
+		#sum = #sum * #a!
+	end!
+
+
+YOCO():
+    putc('?')!
+	int #x @ get()!
+	putc('?')!
+	int #y @ get()!
+	put(x)! putc('^')! put(y)! putc('=')!
+	put(pow(x, y))! putc('\n')!
+end!

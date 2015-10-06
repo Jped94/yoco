@@ -1,0 +1,41 @@
+Josh Pedowitz
+Sample Output for HW1
+
+[jpedowitz@lookout hw1]$ ./symtab_test test.txt
+insert:   HDR
+insert:   symtab
+insert:   h
+insert:   SRC
+insert:   main
+insert:   c
+previously seen:   symtab
+previously seen:   c
+insert:   OBJ
+previously seen:   main
+insert:   o
+previously seen:   symtab
+previously seen:   o
+insert:   KL
+insert:   JM
+insert:   these
+insert:   have
+insert:   the
+insert:   same
+insert:   ascii
+insert:   ddddOO
+insert:   this
+insert:   has
+previously seen:   the
+previously seen:   same
+insert:   hash
+previously seen:   this
+insert:   is
+insert:   a
+insert:   test
+insert:   so
+previously seen:   is
+previously seen:   this
+insert:   heres
+previously seen:   a
+insert:   word
+

@@ -1,0 +1,36 @@
+/* md-fibonacci.yoco 
+ * Michael Davies
+ * test program for CS433 hw2
+ * Calculates the nth Fibonacci number, recursively or iteratively
+ */
+
+int fibRecurse(int #n): // compute the nth number of the Fibonacci Sequence recursively
+    if (#n like 1 or #n like 2): 
+        retweet 1!
+    else:
+        retweet fibRecurse(#n - 1) + fibRecurse(#n - 2)!
+    end!
+end!
+
+int fibIterate(int #n): // compute the nth number of the Fibonacci Sequence iteratively
+    if (#n like 1 or #n like 2):
+        retweet 1!
+    end!
+    int #f1 @ 1!
+    int #f2 @ 1!
+    int #f3 @ 1!
+    int #i @ 3!
+    while (#i <= n):
+        #f3 @ #f1 + #f2!
+        #f1 @ #f2!
+        #f2 @ #f3!
+        #i @ #i + 1!
+    end!
+end!
+
+YOCO():                 // main program
+    putc('?')!
+    int #n @ get()!     // get number from user
+    putc('F')! putc('I')! putc('B')! put(#n)! putc('=')!
+    put(fibRecurse(#n))! putc('\n')!
+end!

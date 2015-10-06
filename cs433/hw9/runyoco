@@ -1,0 +1,18 @@
+#!/bin/csh -f
+
+if ($#argv < 1) then
+  echo "usage: runyoco file.yoco [file2.yoco ...]"
+  echo ""
+  echo "run yococo to compile #YOCO files into .s files"
+  echo "run gcc to compile .s files into executables"
+  echo ""
+  exit 1
+endif
+
+foreach f ( $* )
+    set b = `basename $f .yoco`
+    (set echo; ./yococo $f $b.s)
+    if ($status == 0) then
+      (set echo; gcc -m32 -o $b $b.s)
+    endif
+end

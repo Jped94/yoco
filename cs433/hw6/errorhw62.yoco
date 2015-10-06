@@ -1,0 +1,51 @@
+// errorhw6.yoco
+// Tests error messages for homework 6; should produce exactly one
+// error per line starting at line 6 (36 errors for task 2, 45 total)
+global int[-4..4] #arr!
+global yono[5..5] #brr!
+global int #z @ 6!		    // task 2: first error on line 6
+yono f(ref int #c, yono #a):    int #a!
+    #b @ #c!
+    yono[9..8] #b!
+    #arr @ 10!
+    #arr[#a] @ 11!
+    #arr[12] @ no!
+    if #c:
+        retweet! end!
+    retweet 15! end!
+p(yono[] #a, yono #b, int #i):   #p @ 16!
+    #b @ #f
+         + #b[18]!
+    #i @ p(#brr, #b, 19)!
+    #b @ #a[#arr]!
+    #b @ not #i!
+    f(#i, -#b)!
+    #i @ 23 + #i * (not #b)!
+    int #g @ 24 + #b!
+    #i @ 25 - (#i > #g)!
+    #g @ #i / #a!
+    #i @ #b % 27!
+    #g @ b()!
+    #b @ 29 and #b!
+    #b @ #b or #i!
+    #b @ #b < #i!
+    #b @ #a > #b!
+    #b @ yo <= no!
+    #b @ f(#g, #b) >= 34!
+    #b @ #b like 35!
+    #b @ #i not like #a!
+    #i @ #b like #a or #i not like 37!
+    g(38)!
+    while #arr:
+        retweet yo! end!
+    #a @ #a! end!
+YOCO():  put(yo)!        // task 3: first error on line 42
+    yono #b @ f()!
+    int #j @ get(44)!
+    f(#j, #b, 45)!
+    #b @ f(#b, #b)!
+    #b @ f(#arr[47], #arr)!
+    #b @ f(#j+48, no)!
+    p(#arr, yo, 49)!
+    p(#brr[50], yo, getc())!
+end!                          // no error here, 45 errors total

@@ -1,0 +1,8 @@
+// hello.yoco - Hello world (short version)
+
+YOCO():
+    putc('H')!
+    putc('i')!
+    putc('!')!
+    putc('\n')!
+end!

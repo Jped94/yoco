@@ -1,0 +1,8 @@
+HDR = symtab.h
+SRC = main.c symtab.c
+OBJ = main.o symtab.o
+KL JM these have the same ascii
+ddddOO this has the same hash
+this is a test
+so is this heres a word
+

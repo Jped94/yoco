@@ -1,0 +1,25 @@
+// Plays the 'hi-lo' game. Does basic binary search between 0 - 100
+int hilo():
+	yono #correct? @ no!
+	int #lo @ 0!
+	int #hi @ 100!
+	int #guess, #input!
+	while #correct? is like no:
+		#guess @ ((hi-lo)/2)!
+		put(guess)!
+		#input @ get()!
+		// user prompted: is my guess correct? 1 - correct, 0 - incorrect
+		if (#input is like 1):
+			#correct @ yo!
+		else:
+			// user prompted: is my guess low or hi? 1 - hi, 0 - low
+			#input @ get()!
+			if (#input is like 1):
+				#hi @ guess!
+			else:
+				#lo @ guess!
+			end!
+		end!
+	end!
+	retweet #guess!
+end!

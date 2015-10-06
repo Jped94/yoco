@@ -1,0 +1,90 @@
+[jpedowitz@snowden hw4]$ ./yococo -t ~/cs433/yoco/yoco/testresolve.yoco
+Variable l already declared in scope 1.
+Identifier p not yet declared: line 21 
+#line   3: program (2)
+#line   3:    globlist 
+#line   3:       vardecl (2)
+#line   3:          arraytype (3)
+#line   3:             type = int
+#line   3:             const = 1
+#line   3:             const = 3
+#line   3:          decllist 
+#line   3:             decl (2)
+#line   3:                ident = a : Declared at line 3
+#                         NULL node
+#line   5:       vardecl (2)
+#line   5:          type = int
+#line   5:          decllist 
+#line   5:             decl (2)
+#line   5:                ident = h : Declared at line 5
+#line   5:                const = 10
+#line   7:    funlist 
+#line   7:       fundecl (4)
+#                   NULL node
+#line   7:          ident = p : Unresolved identifier
+#                   NULL node
+#line   8:          stmtlist 
+#line   8:             assign (2)
+#line   8:                array (2)
+#line   8:                   ident = a : Declared at line 3
+#line   8:                   const = 1
+#line   8:                plus (2)
+#line   8:                   times (2)
+#line   8:                      const = 2
+#line   8:                      const = 3
+#line   8:                   const = 4
+#line  11:       fundecl (4)
+#                   NULL node
+#line  11:          ident = YOCO : Unresolved identifier
+#                   NULL node
+#line  12:          stmtlist 
+#line  12:             vardecl (2)
+#line  12:                type = int
+#line  12:                decllist 
+#line  12:                   decl (2)
+#line  12:                      ident = g : Declared at line 12
+#line  12:                      const = 5
+#line  13:             vardecl (2)
+#line  13:                type = int
+#line  13:                decllist 
+#line  13:                   decl (2)
+#line  13:                      ident = l : Declared at line 13
+#line  13:                      const = 5
+#line  14:             vardecl (2)
+#line  14:                type = int
+#line  14:                decllist 
+#line  14:                   decl (2)
+#line  14:                      ident = l : Unresolved identifier
+#line  14:                      const = 7
+#line  15:             vardecl (2)
+#line  15:                type = bool
+#line  15:                decllist 
+#line  15:                   decl (2)
+#line  15:                      ident = k : Declared at line 15
+#line  15:                      const = 0
+#line  16:             if (3)
+#line  16:                not (1)
+#line  16:                   ident = k : Declared at line 15
+#line  17:                stmtlist 
+#line  17:                   return (1)
+#line  17:                      lt (2)
+#line  17:                         ident = g : Declared at line 12
+#line  17:                         ident = h : Declared at line 5
+#                         NULL node
+#line  20:             if (3)
+#line  20:                ne (2)
+#line  20:                   const = 3
+#line  20:                   const = 4
+#line  21:                stmtlist 
+#line  21:                   funcall (2)
+#line  21:                      ident = p : Unresolved identifier
+#                               NULL node
+#line  22:                else (1)
+#line  23:                   stmtlist 
+#line  23:                      vardecl (2)
+#line  23:                         type = bool
+#line  23:                         decllist 
+#line  23:                            decl (2)
+#line  23:                               ident = zz : Declared at line 23
+#line  23:                               const = 0
+

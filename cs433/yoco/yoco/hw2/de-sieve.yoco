@@ -1,0 +1,57 @@
+/* de-sieve.yoco
+ * Dan Matei Epure
+ *
+ * Constructs the Sieve of Erathostenes for numbers less than 100000,
+ * than reads a number n, followed by n numbers, and answers whether they
+ * are prime or not
+ */
+
+initializeToYo(int[] #array, int #length):
+	int #i @ 1!
+
+	while #i < #length:
+		#array[#i] @ yo!
+		#i @ #i + 1!
+	end!
+end!
+
+buildSieve(int[] #array, int #length):
+	initializeToYo(#array, #length)!
+
+	int #base @ 2!
+
+	while #base * #base < #length:
+		if #array[#base] like yo:
+			int #it @ 2 * #base!
+
+			while #it < #length:
+				#array[#it] @ no!
+			end!
+		end!
+
+		#base @ #base + 1!
+	end!
+end!
+
+answerQuestions(int[] #prime?):
+	int #n @ get()!
+
+	while #n > 0:
+		int #curVal @ get()!
+
+		if #prime?[#curVal] like yo:
+			putc('Y')!putc('O')!putc('\n')!
+		else:
+			putc('N')!putc('O')!putc('\n')!
+		end!
+
+		#n @ #n - 1!
+	end!
+end!
+
+YOCO():
+	yono[1..100000] #prime?!
+	buildSieve(#prime?, 100000)!
+
+	answerQuestions(#prime?)!
+end!

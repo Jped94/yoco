@@ -1,0 +1,7 @@
+// testhw2.yoco - test program for hw 2
+
+YOCO():
+    int #a @ 3!
+    int #b @ -#a + 'a' * '\\'!
+    put(#b)!
+end!

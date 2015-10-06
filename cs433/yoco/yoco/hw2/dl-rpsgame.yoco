@@ -1,0 +1,134 @@
+//rps.yoco
+//Duncan Levear
+//plays rock paper scissors using tit for tat strategy
+  
+global int #cpu_wins!
+global int #user_wins!
+
+uwin():
+  putc('Y')!
+  putc('o')!
+  putc('u')!
+  putc(' ')!
+  putc('w')!
+  putc('i')!
+  putc('n')!
+  putc('\n')!
+end!
+
+ulose():
+  putc('Y')!
+  putc('o')!
+  putc('u')!
+  putc(' ')!
+  putc('l')!
+  putc('o')!
+  putc('s')!
+  putc('e')!
+  putc('\n')!
+end!
+
+
+wedraw():
+  putc('D')! putc('r')! putc('a')! putc('w')! putc('\n')!
+end!
+
+bye():
+  putc('b')! putc('y')! putc('e')! putc('\n')!
+end!
+
+rps_prompt():
+  putc('w')!
+  putc(' ')!
+  putc(' ')!
+  putc('i')!
+  putc('n')!
+  putc('s')!
+  putc(':')!
+  putc(' ')!
+  put(#user_wins)
+  putc('-')!
+  
+  putc('l')!
+  putc(' ')!
+  putc(' ')!
+  putc('o')!
+  putc('s')!
+  putc('s')!
+  putc('e')!
+  putc('s')!
+  putc(':')!
+  putc(' ')!
+  putc(#cpu_wins)!
+  
+  putc('P')!
+  putc('i')!
+  putc('c')!
+  putc('k')!
+  putc(' ')!
+  putc('[')!
+  putc('r')!
+  putc('p')!
+  putc('s')!
+  putc(']')!
+  putc(':')!
+  putc(' ')!
+
+end!
+
+print_cpu(choice):
+  putc('C')!
+  putc('P')!
+  putc('U')!
+  putc(' ')!
+  putc('p')!
+  putc('i')!
+  putc('c')!
+  putc('k')!
+  putc('s')!
+  putc(' ')!
+  put(choice)! 
+  putc('\n')!
+end!
+
+YOCO():
+  #cpu_wins @ 0!
+  #user_wins @ 0!
+
+  int #cpu_choice @ 'r'!
+  int #user_choice @ 'r'!
+
+  //print initial prompt
+  rps_prompt()!
+  //get input
+  #user_choice @ getc()!
+
+  while #user_choice not like 'q':
+    print_cpu(#cpu_choice)!
+
+    if #cpu_choice like 'r':
+      if #user_choice like 'r': wedraw()!
+      if #user_choice like 'p': uwin()!
+      if #user_choice like 's': ulose()!
+    end!
+    else if #cpu_choice like 'p':
+      if #user_choice like 'r': ulose()!
+      if #user_choice like 'p': wedraw()!
+      if #user_choice like 's': uwin()!
+    end!
+    else if #cpu_choice like 's':
+      if #user_choice like 'r': uwin()!
+      if #user_choice like 'p': ulose()!
+      if #user_choice like 's': wedraw()!
+    end!
+
+    #cpu_choice @ #user_choice!
+
+    //print prompt (now they might choose 'q' to quit)
+    rps_prompt()!
+    //get input
+    #user_choice @ getc()!
+  end!
+  bye()!
+end!
+

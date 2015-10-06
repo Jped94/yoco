@@ -1,0 +1,13 @@
+// sh-fibonacci.yoco
+// Sam Hage
+// gives nth fibonacci number
+
+YOCO(int #n):
+	int[1..#n] #fibb!
+	#fibb[1] @ 1!
+	#fibb[2] @ 1!
+	int #i @ 3!
+	while(#i <= #n):
+		#fibb[#i] @ #fibb[#i - 1] + #fibb[#i - 2]!
+	retweet #fibb[#n]!
+end!

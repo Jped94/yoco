@@ -1,0 +1,45 @@
+/*
+*   jt-insertion.yoco
+*
+*	Uses insertion sort to sort an array of five integers, then prints the sorted array.
+*	
+*/
+
+YOCO():
+
+	int #a, #b, #c!
+
+	int[1..6] #array!
+    #array[1] @  54!
+    #array[2] @ 33!
+    #array[3] @ 69!
+    #array[4] @  20!
+    #array[5] @  -1!
+    #array[6] @ 27!
+
+    #a @ 1!
+
+    while #a <= 6:
+
+    	#b @ #a!
+		
+		while #a > 0 and #array[#a] < #array[#a-1]:
+    		#c @ #array[#b]!
+    		#array[#b] @ #array[#b-1]!
+    		#array[#b-1] @ #c!
+    		#b @ #b - 1!
+    	end!
+
+    	#a @ #a +1!
+    end!
+
+    #a @ 1!
+
+    while #a <=6:
+    	put(#array[#a])!
+    	#a @ #a + 1!
+    end!
+end!
+
+
+

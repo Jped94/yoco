@@ -1,0 +1,24 @@
+/* cm-factorial.yoco
+ calculates the factorial of a number
+ Katie Manduca
+ CS433 HW2
+*/
+
+factorial(int #n):
+	if #n like 0:
+		retweet 1!
+	else:
+		retweet #n * factorial(#n - 1)!
+	end!
+end!
+
+YOCO():
+	putc('?')!
+	int #n @ get()!
+	put(#n)!
+	putc('!')!
+	putc('=')!
+	putc(' ')!
+	put(factorial(#n))!
+	putc('\n')!
+end!

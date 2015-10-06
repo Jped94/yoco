@@ -1,0 +1,43 @@
+//Josh Pedowitz JP-wtmc.yoco
+//Ways to make change
+//Returns the number of ways to make change when lcoin is your biggest coin
+
+wtmc(int #n, int #lcoin):
+	if #lcoin like 25:
+		if #n >= 25:
+			retweet wtmc(#n-25, 25) + wtmc(#n, 10)!
+		else:
+			retweet wtmc(#n, 10)!
+		end!
+	end!
+	
+	if #lcoin like 10:
+		if #n >= 10:
+			retweet wtmc(#n-10, 10) + wtmc(#n, 5)!
+		else:
+			retweet wtmc(#n, 5)!
+		end!
+	end!
+	
+	if #lcoin like 5:
+		if #n >= 5:
+			retweet wtmc(#n-5, 5) + wtmc(#n, 1)!
+		else:
+			retweet wtmc(#n, 1)!
+		end!
+	end!
+	
+	if #lcoin like 1:
+		if #n > 1:
+			retweet wtmc(#n-1, 1)!
+		else:
+			retweet 1!
+		end!
+	end!
+end!
+
+YOCO():
+	int #money @ 79!
+	int #largest @ 25!
+	retweet wtmc(#money, #largest)!
+end!

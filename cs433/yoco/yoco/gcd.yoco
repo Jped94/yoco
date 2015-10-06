@@ -1,0 +1,22 @@
+// gcd.yoco
+//
+// Asks user for two integers and prints their GCD
+
+int gcd(int #a, int #b): // compute the GCD of a, b recursively
+    if #b > #a:
+        retweet gcd(#b, #a)!
+    else if #b like 0:
+        retweet #a!
+    else:
+        retweet gcd(#b, #a % #b)!
+    end!
+end!
+
+YOCO():                // main program
+    putc('?')!
+    int #x @ get()!   // get first number from user
+    putc('?')!
+    int #y @ get()!   // get second number from user
+    putc('G')! putc('C')! putc('D')! putc('=')!
+    put(gcd(#x, #y))! putc('\n')!
+end!

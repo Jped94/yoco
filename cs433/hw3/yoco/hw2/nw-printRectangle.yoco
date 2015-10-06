@@ -1,0 +1,26 @@
+/*
+ * nw-printRectangle.yoco
+ */
+
+printRectangle(int #a, int #b): // print a rows of b asterisks
+	int #c!
+	while #a > 0:
+		#c @ #b!
+		while #c > 0:
+			putc('*')!
+			#c @ #c - 1!
+		end!
+		putc('\n')!
+	end!
+end!
+
+YOCO():
+	putc('?')!
+	int #x @ get()!		// get first number from user
+	putc('?')!
+	int #y @ get()!		// get second number from user
+
+	put(#a)! putc('*')! putc('b')! putc('=')! putc('\n')!
+	printRectangle(#a, #b)!
+	put(#x * #y)! putc('!')! putc('\n')!
+end!

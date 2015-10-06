@@ -1,0 +1,23 @@
+// testhw22.yoco - test program for hw 2
+// Seconds to Hours,Min,Sec
+
+int secondsToHMS(int #a):
+	int #h @ #a/60!
+	int #i @ #a%3600!
+	int #m @ #i/60!
+	int #s @ #i%60!
+	int[1..3] #A!
+	#A[1] @ #h!
+	#A[2] @ #m!
+	#A[3] @ #s!
+	retweet #A!
+end!
+
+YOCO():
+	putc('?')!
+	int #a @ get()!
+	int[1..3] #B @ secondsToHMS(#a)!
+	put(#B[1])! putc('H')! putc(#B[2])! putc('M')! putc(#B[3])! putc('S')!
+end!
+
+

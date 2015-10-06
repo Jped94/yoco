@@ -1,0 +1,15 @@
+// ws-length.yoco
+
+/*little function to
+compute the length of the 
+string*/
+int len():
+	int #c @ getc()!
+	if #c not like '\n':
+		retweet 1 + len()!
+	end!
+
+
+YOCO():
+    put(len())!
+end!

@@ -1,0 +1,14 @@
+/* Trevor Truog
+ * tt-fib.yoco
+ * Assignment 1
+ */
+
+fib(#n): // find the nth member of a fibonacci sequence.
+	if #n like 0:
+		retweet 0!
+	end!
+	if #n like 1:
+		retweet 1!
+	end!
+	retweet fib(#n-1) + fib(#n-2)!
+end!

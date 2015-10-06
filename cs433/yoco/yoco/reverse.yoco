@@ -1,0 +1,21 @@
+/* reverse.yoco
+ reverses string entered by the user
+ (this is a multi-line comment)
+*/
+
+global int #newline!  // global variable
+
+rev():
+    int #c @ getc()!        // read first character
+    if #c not like #newline:
+        rev()!              // reverse rest of string
+    end!
+    putc(#c)!               // print first character
+end!
+
+YOCO():
+    #newline @ '\n'!
+    putc('?')!
+    rev()!
+    putc(#newline)!
+end!

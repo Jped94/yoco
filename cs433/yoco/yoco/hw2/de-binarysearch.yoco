@@ -1,0 +1,43 @@
+/* de-binarysearch.yoco
+ * Dan Matei Epure
+ *
+ * Reads a sorted array (length, and then elements), reads an integer, and
+ * checks if the integer is in the array, using binary search
+ */
+
+int binarySearch(int[] #array, int #length, int #value):
+	int #pos @ 0!
+	int #step @ 1!
+
+	while step < #length:
+		#step @ #step * 2!
+	end!
+
+	while #step > 0:
+		if #pos + #step <= #length and #array[#pos + #step] <= #value:
+			#pos @ #pos + @step!
+		end!
+
+		#step @ #step / 2!
+	end!
+
+	if #array[#pos] not like #value: // hasn't found number
+		putc('N')!putc('O')!putc('T')!putc(' ')!
+	end!
+
+	putc('I')!putc('N')!putc(' ')!putc('A')!putc('R')!putc('R')!putc('A')!putc('Y')!
+end!
+
+ YOCO():
+ 	int[1..10001] #array!
+ 	int #length @ get()! // has to be smaller than 10001 to work
+ 	int #it @ 1!
+
+ 	while #it <= #length:
+ 		#array[it] @ get()! // array has to be sorted
+ 		#it @ #it + 1!
+ 	end!
+
+ 	int #value @ get()! // value to search for
+ 	binarySearch(#array, #length, #value)!
+ end!

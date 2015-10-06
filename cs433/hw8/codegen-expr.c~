@@ -1,0 +1,472 @@
+/* codegen-expr.c  for CS 433 project
+ *
+ * code generation for expressions
+ *
+ * By James Thornton & Josh Pedowitz, based on code by Daniel Scharstein
+ *
+ * Time to Complete: 9 hours
+ *
+ * Version for hw 8
+ */
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include "symtab.h"
+#include "syntree.h"
+#include "codegen.h"
+
+
+/***********************************************************************
+ *  Procedures for expressions
+ */
+
+/* Code generation for a variable (Nident or Narray).  The returned
+ * opdesc is always a memory location (i.e. an assignable).
+ */
+opdesc *genVar(node *varnode)
+{
+    node *subvar, *subexpr;
+    int disp;
+    opdesc *op0, *op1;
+    typedesc *type0;
+    int typesize;
+
+    switch (varnode->unk.type) {
+        
+    case Nident:
+
+        // use newDispOp to make opdesc for globals, locals, and parameters
+        // for refparams, use forceToReg and make Dis pOp
+
+        if(varnode->ident.decl->unk.type == formaldecl) {
+            disp = varnode->ident.decl->formal.vardisp;
+            op0 = newDispOp(disp+PARAM_OFFS, ebp);
+
+            if (varnode->ident.decl->formal.valparam == FALSE) {
+                op0 = forceToReg(op0, varnode->unk.line);
+                makeDispOp(op0, 0, FALSE);    
+            }
+
+        } else if (varnode->ident.decl->var.type == vardecl) {
+            disp = varnode->ident.decl->var.vardisp;
+            // Check for global or local
+            if (varnode->ident.decl->var.level == 0) op0 = newDispOp(disp, GLOBALREG);
+            else op0 = newDispOp(LOCAL_OFFS - disp- varnode->ident.decl->var.vartype->typesize, ebp);
+            
+        }
+        return op0;
+
+    case Narray:
+        subvar = varnode->internal.child[0];
+        subexpr = varnode->internal.child[1];
+
+        // call genExpr and genVar on subexpr and subvar (in that order)
+        // to get index and base address of array
+
+        op0 = genExpr(subexpr);
+        op1 = genVar(subvar);
+        
+        typesize  = type0->typespec == integer ? INTSIZE : BOOLSIZE;
+
+
+        // adjust the base address if lowbound != 0
+
+        type0 = subvar->ident.decl->var.vartype;  
+
+
+        op1->disp -= typesize * type0->lowbound;
+
+        // if index is constant, simply add correct amount to base
+        // address's displacement
+
+        if (isConst(op0)){
+            int subnum = op0->val;
+            freeOp(op0);              
+            op1->disp += op0->val * typesize;
+            if (type0->lowbound != 0 || type0->highbound != 0) {
+                if (subnum > type0->highbound || subnum < type0->lowbound) {
+                    fprintf(stderr, "Line %d. Index out of bounds.", varnode->unk.line);
+                }
+            }
+        } else {
+            op0 = forceToReg(op0, varnode->unk.line);
+            makeIndexOp(op1, op0, typesize);
+        }
+
+        return op1;
+        // also check if constant index is within bounds if bounds are known
+        // (i.e., for locals and globals).  If not, output a warning
+        // to stderr but keep generating code anyway
+        
+        // else, make sure the result of subexpr is in a register and
+        // use makeIndexOp
+
+        
+
+    default:
+        assert(FALSE);
+        return NULL;
+    }
+}
+
+/* Code generation for an expression: variable (Nident, Narray),
+ * Nconst, Nfuncall, unary ops (Nnot, Nneg), and binary ops (Nor,
+ * Nand, Nlt, Ngt, Neq, Nle, Nge, Nne, Nplus, Nminus, Ntimes, Ndiv,
+ * Nmod).  Return an opdesc holding the result.
+ */
+opdesc *genExpr(node *expr)
+{
+    opdesc *op0, *op1, *op2;
+    codelabel booltrue, boolend;
+  
+    switch (expr->unk.type) {
+    case Nident:
+    case Narray:
+        return genVar(expr);
+
+    case Nconst:
+        return newConstOp(expr->constant.val);
+    
+    case Nfuncall:
+        return newConstOp(0);  /* later -- for now, just return constant 0 */
+
+    case Nnot:
+    case Nor:
+    case Nand:
+    case Nlt:
+    case Ngt:
+    case Neq:
+    case Nle:
+    case Nge:
+    case Nne:
+        // use genCondExpr() to return the value 0 or 1 in a register
+
+
+        initLabel(&booltrue, "booltrue");
+        initLabel(&boolend, "boolend");
+        genCondExpr(expr, TRUE, &booltrue);
+	
+	    /* if get to here, expression is false */
+        op0 = newConstOp(0);
+        op0 = forceToReg(op0, expr->internal.line);
+	    outputCmd("jmp", expr->internal.line);
+	    outputLabel(&boolend);
+	
+	    /* if expression is true */
+        placeLabel(&booltrue);
+        outputCmd("movl", expr->internal.line);
+        outputConst(1); outputOp(op0);
+
+	    /* end: */
+        placeLabel(&boolend);
+        return op0;
+
+        
+    
+    case Nneg:
+
+        // call genExpr on child node
+        // if constant opdesc, simply negate its value
+        // else make sure opdesc is register, then output code to perform
+        // negation (use outputCmd and outputOp)
+        // return resulting opdesc
+    
+        op0 = genExpr(expr->internal.child[0]);
+        if (isConst(op0)) op0->val = -op0->val;
+        else {
+                op0 = forceToReg(op0, expr->unk.line);
+                outputCmd("negl", expr->unk.line);
+                outputOp(op0);       
+
+        }
+        return op0;
+
+    case Nplus:
+    case Nminus:
+    case Ntimes:
+
+        // call genExp on both child nodes to get op0 and op1
+        op0 = genExpr(expr->internal.child[0]);
+        op1 = genExpr(expr->internal.child[1]);
+        
+        // if both constant update op0's value, free op1, and return op0
+        if(isConst(op0) && isConst(op1)) {
+            switch (expr->unk.type){
+                case Nplus: op0->val += op1->val; break;
+                case Nminus: op0->val -= op1->val; break;
+                case Ntimes: op0->val *= op1->val; break;
+                default: assert(FALSE); return NULL;
+            }
+            freeOp(op1);
+            return op0;
+        } else {
+        // for plus, minus, times:
+        //   make op0 a register, output the appropriate code, free op1,
+        //   return op0
+            op0 = forceToReg(op0, expr->unk.line);
+            switch (expr->unk.type){
+                case Nplus: outputCmd("addl", expr->unk.line); break;
+                case Nminus: outputCmd("subl", expr->unk.line); break;
+                case Ntimes: outputCmd("imull", expr->unk.line); break;
+                default: assert(FALSE); return NULL;
+            }
+            outputOp(op1);
+            outputOp(op0);
+            freeOp(op1);
+            return op0;
+        }
+
+    
+    case Ndiv:
+    case Nmod:
+
+        // call genExp on both child nodes to get op0 and op1
+        // if both constant update op0's value, free op1, and return op0
+
+        op0 = genExpr(expr->internal.child[0]);
+        op1 = genExpr(expr->internal.child[1]);
+
+        if(isConst(op0) && isConst(op1)) {
+            op0->val = expr->unk.type == Ndiv ? op0->val / op1->val : op0->val % op1->val;
+            freeOp(op1);
+            return op0;
+        } else {
+        // for div and mod:
+        //   special case: need op0 in eax, zero-extend into edx
+        //   use clearSpecificReg to get opdesc for edx
+        //   use forceToSpecificReg to get eax (lock edx while doing this)
+        //   make sure op1 is not a constant (seems required for divl;
+        //     in that case move to reg, while locking both eax, edx)
+        //   output "cltd" and div instruction
+        //   depending on div or mod, return one of eax, edx, free the other
+
+            op2 = clearSpecificReg(edx, expr->unk.line);
+            lock(op2); 
+            op0 = forceToSpecificReg(op0, eax, expr->unk.line);    
+            if(isConst(op1)) {
+                lock(op0);           
+                op1 = forceToReg(op1, expr->unk.line);
+                unlock(op0);
+            }
+            
+            unlock(op2);
+            outputCmd("cltd", expr->unk.line);
+            outputCmd("idivl", expr->unk.line);
+            outputOp(op1);
+            freeOp(op1);
+            if ( expr->unk.type == Ndiv) {
+                freeOp(op2);
+                return op0;
+            } else {
+                freeOp(op0);
+                return op2;
+            }
+
+        }
+
+
+    default:
+        assert(FALSE);
+        return NULL;    /* this is to avoid warning msg */
+    }
+}
+
+
+/***********************************************************************
+ *  Procedures for conditional expressions
+ */
+
+/* Code generation for a logical expression (Nnot, Nor, Nand).
+ * Uses short-circuit evaluation by calling genCondExpr approprately
+ * on the subexpression(s).
+ */
+void genLogical(node *expr, int sense, codelabel *target)
+{
+    opdesc *child0, *child1;
+    codelabel label;
+    int isOr = FALSE;
+    char* labelname;
+    
+    switch (expr->unk.type) {
+        case Nand:
+        case Nor:
+            if (expr->unk.type == Nor) isOr = TRUE;
+            child0 = genExpr(expr->internal.child[0]);
+            child1 = genExpr(expr->internal.child[1]);
+            if (isConst(child0) && isConst(child1)) { //handle internally if both are const
+               if ((((child0->val || child1->val) == sense) && isOr) ||
+                    (((child0->val && child1->val) == sense) && !isOr)) {
+                    outputCmd("jmp", expr->unk.line);
+                    outputLabel(target);
+                } else outputCmd(NULL, expr->unk.line); 
+            } else {
+
+                if ((sense && isOr) || (!sense && !isOr)) { //short circuit evaluation
+                    genCondExpr(expr->internal.child[0], isOr, target);
+                    genCondExpr(expr->internal.child[1], isOr, target);
+                } else {
+                    labelname = expr->unk.type == Nor ? "or" : "and";
+                    initLabel(&label, labelname);
+                    genCondExpr(expr->internal.child[0], isOr, &label);
+                    genCondExpr(expr->internal.child[1], !isOr, target);
+                    placeLabel(&label);
+                }
+                
+            }
+            freeOp(child0);
+            freeOp(child1);
+            break;
+        
+        case Nnot:
+            genCondExpr(expr->internal.child[0], !sense, target);
+            break;
+        default:
+            assert(FALSE);
+    }
+    
+}
+
+
+/* Code generation for a relational expression (Nlt, Nge, Ngt, Nle,
+ * Nne, Neq).  Generates code for node0 and node1, outputs a "cmpl"
+ * instruction, frees the used registers, and then outputs a
+ * conditional jump.
+ */
+void genRelational(node *expr, int sense, codelabel *target)
+{
+    
+    opdesc *op0, *op1;
+    op0 = genExpr(expr->internal.child[0]);
+    op1 = genExpr(expr->internal.child[1]);
+
+    int result; // result of comparison
+    
+    if (isConst(op0) && isConst(op1)){
+        int val0 = op0->val;
+        int val1 = op1->val;
+        switch (expr->unk.type) {
+            case Nlt: result = val0 < val1;
+            case Nge: result = val0 >= val1;      
+            case Ngt: result = val0 > val1;
+            case Nle: result = val0 <= val1;
+            case Nne: result = val0 != val1;
+            case Neq: result = val0 == val1;
+
+            default: 
+                assert(0);
+        }
+        // if the result of the comparison is constant, use unconditional jump:
+        //    outputCmd("jmp", line);
+        if (result == sense) {
+            outputCmd("jmp", expr->unk.line);
+            outputLabel(target);
+        // or no jump (fall through), but force printing of line number:
+        } else {
+            outputCmd(NULL, expr->unk.line);
+        }
+
+    } else {
+        if (isMemloc(op0) && isMemloc(op1)){
+            //op0 = forceToReg(op0, expr->unk.line);
+            op1 = forceToReg(op1, expr->unk.line);              
+        }
+
+        outputCmd("cmpl", expr->unk.line);
+        if (isConst(op0)){
+            outputOp(op0);
+            outputOp(op1);
+        } else {
+            outputOp(op1);
+            outputOp(op0);
+        }
+
+        switch (expr->unk.type) {
+            case Nlt: outputCmd(sense ? "jl"  : "jge", line); break;
+            case Nge: outputCmd(sense ? "jge" : "jl",  line); break;
+            case Ngt: outputCmd(sense ? "jg"  : "jle", line); break;
+            case Nle: outputCmd(sense ? "jle" : "jg", line); break;
+            case Nne: outputCmd(sense ? "jne" : "je",  line); break;
+            case Neq: outputCmd(sense ? "je"  : "jne", line); break;
+            default: assert(0);
+        }
+        outputLabel(target);
+        freeOp(op0);
+        freeOp(op1);
+
+    }
+
+    
+    
+   
+
+    // Note: when outputting "cmpl", can't have two memloc operands or
+    // first operand memloc and second constant:
+    // cmpl memloc, memloc    - not ok
+    // cmpl memloc, constant  - not ok
+    // cmpl constant, memloc  - ok!
+}
+
+/* Code generation for a conditional expression.  Instead of returning an
+ * opdesc, output code to brach to "target" if the result of computing
+ * "expr" is equal to "sense", and fall through to code below otherwise.
+ */
+void genCondExpr(node *expr, int sense, codelabel *target)
+{
+    opdesc *op;
+
+    switch (expr->unk.type) {
+    case Nident:
+    case Narray:
+    case Nconst:
+    case Nfuncall:
+
+
+        op = genExpr(expr);
+        if (isConst(op)) { // handle internally if it's a const
+            if (((op->val == 0) && sense == FALSE) || (!(op->val == 0) && sense == TRUE)) {
+                outputCmd("jmp", expr->unk.line);
+                outputLabel(target);
+            } else {
+                outputCmd(NULL, expr->unk.line);
+            }
+        } else {
+            outputCmd("cmpl", expr->unk.line);
+            outputConst(0);
+            outputOp(op);
+            freeOp(op);
+        if (!sense) outputCmd("je", expr->unk.line);
+        else outputCmd("jne", expr->unk.line);
+        outputLabel(target);
+        }
+        
+        // jump or fall through depending on whether result == 0
+    
+        break;
+    
+    case Nnot:
+    case Nor:
+    case Nand:
+        genLogical(expr, sense, target);
+        break;
+    
+    case Nlt:
+    case Ngt:
+    case Neq:
+    case Nle:
+    case Nge:
+    case Nne:
+        genRelational(expr, sense, target);
+        break;
+
+    /* none of the following should happen since they don't return a boolean */
+    case Nneg:
+    case Nplus:
+    case Nminus:
+    case Ntimes:
+    case Ndiv:
+    case Nmod:
+    default: assert(0);
+    }
+}

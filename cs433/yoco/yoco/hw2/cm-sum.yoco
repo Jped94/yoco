@@ -1,0 +1,37 @@
+// cm-sum.yoco
+// calculates the sum of an array
+// Katie Manduca
+// CS433 HW2
+
+sum(int[] #nums, int #len):
+	if #len like 0:
+		retweet 0!
+	else
+		retweet #nums[0] + sum(#nums[1..(#len - 1)], #len - 1)!
+	end!
+end!
+
+YOCO():
+	putc('?')!
+	int #len @ get()! // get length of array
+	int[] #nums @ [0..#len]!
+
+	// fill array with numbers
+	int #i @ 0!
+	int #n!
+	while #i < #len:
+		putc('?')!
+		#n @ get()!
+		#nums[#i] @ #n!
+		#i @ #i + 1!
+	end!
+
+	// sum the array
+	int #sum @ sum(#nums, #len)!
+
+	// print results
+	putc('=')!
+	putc(' ')!
+	put(#sum)!
+	putc('\n')!
+end!

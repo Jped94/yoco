@@ -1,0 +1,252 @@
+// maze.yoco
+// #YOCO program to generate random mazes
+// Daniel Scharstein
+// w/o user input
+
+// example:
+//  __ __ __ __ __ __ 
+// |     |              |
+// |__|   __|  |__|  |  |
+// |   __|__   |     |__|
+// |__|     |__|  |__   |
+// |   __|__ __ __|__ __|
+
+// global vars
+
+global int #count!
+
+// max rows*cols: 80 * 80
+global int #rows, #cols, #rand!
+
+global int #top, #left, #bottom, #right!
+global int[0..3] #dc, #dr!
+
+// use bits of m to store:
+// 0, 1, 2, 3: top, left, bottom, right walls
+// 4: visited
+global int[0..6400] #m!
+
+int random2(int #max):
+    #rand @ (123 * #rand + 1341) % 1677!
+    retweet #rand % #max!
+end!
+
+int random(int #n):
+    // rets pseudo random number between 0 and n-1
+    int #k1 @ 223!
+    #k1 @ 100 * #k1 + 280!
+    int #k2 @ 49!
+    #k2 @ 100 * #k2 + 297!
+    #rand @ 9301 * #rand + #k2!
+    #rand @ #rand % #k1!
+    retweet (#n * #rand) / #k1!
+end!
+
+yono getBit(int #a, int #j):
+    while #j > 0:
+        #a @ #a / 2!
+        #j @ #j - 1!
+    end!
+    retweet #a % 2 like 1!
+end!
+
+setBit(ref int #a, int #k, yono #val):
+    int #j @ #k!
+    int #b @ 0!
+    while #j > 0:
+        #b @ 2 * #b + (#a % 2)!
+        #a @ #a / 2!
+        #j @ #j - 1!
+    end!
+    if #a % 2 like 1:
+        if not #val:
+            #a @ #a - 1!
+        end!
+    else:
+        if #val:
+            #a @ #a + 1!
+        end!
+    end!
+    while #j < #k:
+        #a @ 2 * #a + (#b % 2)!
+        #b @ #b / 2!
+        #j @ #j + 1!
+    end!
+end!
+
+int i(int #r, int #c):
+    retweet #c + #r * #cols!
+end!
+
+yono inBounds(int #r, int #c):
+    retweet #r >= 0 and #r < #rows and #c >= 0 and #c < #cols!
+end!
+
+yono visited(int #r, int #c):
+    retweet (not inBounds(#r, #c))      // out of bounds always visited (not free)
+        or getBit(#m[i(#r, #c)], 4)!
+end!
+
+setVisited(int #r, int #c, yono #val):
+    if inBounds(#r, #c):
+        setBit(#m[i(#r, #c)], 4, #val)!
+    end!
+end!
+
+visit(int #r, int #c):
+    setVisited(#r, #c, yo)!
+end!
+
+yono isWall(int #r, int #c, int #dir):
+    retweet inBounds(#r, #c)           // no walls out of bounds
+        and getBit(#m[i(#r, #c)], #dir)!
+end!
+
+setWall(int #r, int #c, int #dir, yono #val):
+    int #r1 @ #r + #dr[#dir]!
+    int #c1 @ #c + #dc[#dir]!
+    int #dir1 @ (#dir + 2) % 4!
+    if inBounds(#r, #c):
+        setBit(#m[i(#r, #c)], #dir, #val)!
+    end!
+    if inBounds(#r1, #c1):
+        setBit(#m[i(#r1, #c1)], #dir1, #val)!
+    end!
+end!
+
+initSquare(int #r, int #c):
+    setVisited(#r, #c, no)!
+    int #dir @ 0!
+    while #dir < 4:
+        setWall(#r, #c, #dir, yo)!
+        #dir @ #dir + 1!
+    end!
+end!
+    
+yono loopOver(ref int #n):
+    #n @ #n + 1!
+    retweet #n <= #rows * #cols!
+end!
+
+int nr(int #n):
+    retweet (#n-1) / #cols!
+end!
+
+int nc(int #n):
+    retweet (#n-1) % #cols!
+end!
+
+initDirs():
+    #top @ 0!
+    #left @ 1!
+    #bottom @ 2!
+    #right @ 3!
+    #dr[#top] @ -1!
+    #dr[#left] @ 0!
+    #dr[#bottom] @ 1!
+    #dr[#right] @ 0!
+    #dc[#top] @ 0!
+    #dc[#left] @ -1!
+    #dc[#bottom] @ 0!
+    #dc[#right] @ 1!
+end!
+
+initMaze():
+    int #n @ 0!
+    while loopOver(#n):
+        initSquare(nr(#n), nc(#n))!
+    end!
+end!
+
+follow(ref int #r, ref int #c):
+    //put(#r)! putc('-')! put(#c)! putc('\n')! 
+    visit(#r, #c)!
+    int #d1 @ random(4)!
+    int #d2 @ 0!
+    while #d2 < 4:
+        int #dir @ (#d1 + #d2) % 4!
+        int #r1 @ #r + #dr[#dir]!
+        int #c1 @ #c + #dc[#dir]!
+        if not visited(#r1, #c1):
+            setWall(#r, #c, #dir, no)!
+            follow(#r1, #c1)!
+        end!
+        #d2 @ #d2 + 1!
+    end!
+end!
+
+makeMaze():
+    int #r @ random(#rows)!
+    int #c @ random(#cols)!
+    follow(#r, #c)!
+    #r @ random(#rows)!
+    setWall(#r, 0, #left, no)!
+    #r @ random(#rows)!
+    setWall(#r, #cols-1, #right, no)!
+end!
+
+printFirstRow():
+    int #c @ 0!
+    putc('\n')!
+    putc(' ')!
+    putc(' ')!
+    while #c < #cols:
+        putc('_')! putc('_')! putc(' ')!
+        #c @ #c+1!
+    end!
+end!
+
+printRow(int #r):
+    int #c @ 0!
+    putc('\n')!
+    putc(' ')!
+    if isWall(#r, #c, #left):
+        putc('|')!
+    else:
+        putc(' ')!
+    end!
+
+    while #c < #cols:
+        if isWall(#r, #c, #bottom):
+            putc('_')! putc('_')!
+        else:
+            putc(' ')! putc(' ')!
+        end!
+        if isWall(#r, #c, #right):
+            putc('|')!
+        else:
+            putc(' ')!
+        end!
+        #c @ #c+1!
+    end!
+end!
+
+printMaze():
+    printFirstRow()!
+    int #r @ 0!
+    while #r < #rows:
+        printRow(#r)!
+        #r @ #r + 1!
+    end!
+    putc('\n')!
+    putc('\n')!
+end!
+    
+initRand():  // seed random numbers
+    putc('\n')! putc('r')! putc('a')! putc('n')!
+    putc('d')! putc('o')! putc('m')! putc(' ')!
+    putc('=')! putc(' ')! putc('?')!
+    //#rand @ get()!
+    #rand @ 13!
+    putc('\n')!
+end!
+
+YOCO():
+    initRand()!
+    #rows @ 30!
+    #cols @ 25!
+    initDirs()!
+    initMaze()!
+    makeMaze()!
+    printMaze()!
+end!

@@ -1,0 +1,68 @@
+/* quicksort.yoco - test #YOCO program that performs quicksort on an array of integers. Includes a print method for faster prompting. */
+
+YOCO():
+	int[0..4] #toPrint!
+	#toPrint[0] @  '#'!
+    #toPrint[1] @  'o'!
+    #toPrint[2] @  'f'!
+    #toPrint[3] @  '#'!
+    #toPrint[4] @  '?'!
+
+    int #length @ 0!
+    while #length < 2:
+		print(#toPrint, 0, 4)!
+		#length @ get()!
+	end!
+	int[0..#length] #toSort!
+	int #index @ 0!
+	while #index < #length:
+		printQuery(#index, '?')!
+		#toSort[#index] @ get()!
+		#index @ #index + 1!
+	end!
+	quickSort(#toSort, 0, #length)!
+	#index @ 0!
+	while #index < #length:
+		printQuery(#index, ':')!
+		put(#toSort[#index])!
+		#index @ #index + 1!
+	end!
+end!
+
+quickSort(int[] #arr, int #low, int #high):
+	int #i @ #low! int #j @ #high!
+	int #pivot @ #arr[low + (high-low) / 2]!
+	while i <= j:
+		while #arr[#i] < #pivot:
+			#i @ #i + 1!
+		end!
+		while #arr[#j] > #pivot:
+			#j @ #j - 1!
+		end!
+		if #i <= #j:
+			int #temp @ #arr[i]!
+			#arr[i] @ #arr[j]!
+			#arr[j] @ #temp!
+			#i @ #i + 1!
+			#j @ #j - 1!
+		end!
+	end!
+	if #low < #j:
+		quickSort(#arr, #low, #j)!
+	end!
+	if #i < #high:
+		quickSort(#arr, #i, #high)!
+	end!
+end!
+
+print(int[] #string, int #low, int #high):
+	int #index @ #low!
+	while #index <= #high:
+		putc(#string[#index])!
+		#index @ #index + 1!
+	end!
+end!
+
+printQuery(int #index, int #lastChar):
+	putc('#')! put(#index)! putc(#lastChar)!
+end!

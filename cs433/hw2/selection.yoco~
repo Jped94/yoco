@@ -1,0 +1,41 @@
+// selection.yoco
+// selection sort
+
+selectionSort(int[] #V)
+	int #i!
+	int #j!
+	int #n!
+	int #iMin!
+	#n @ 5!
+	#j @ 0!
+
+	while #j < #n-1:
+		#iMin @ #j!
+
+		#i @ j+1!
+		while #i < #n:
+	
+			if #V[#i] < #V[#iMin]:
+				#iMin @ #i!
+				end!
+			#i @ #i+1!
+			end!
+		if #iMin not like #j:
+			int #temp!
+			#temp @ #V[#j]!
+			#V[#j] @ #V[#iMin]!
+			#V[#iMin] @ #temp!
+			end!
+
+		#j @ #j+1!
+		end!
+	retweet #V!
+
+YOCO():
+	int[1..5] #V!
+	#V[0] @ 5
+	#V[1] @ 8
+	#V[2] @ 2
+	#V[3] @ 3
+	#V[4] @ 1
+	selectionSort(#V)

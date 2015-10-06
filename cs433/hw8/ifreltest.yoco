@@ -1,0 +1,38 @@
+// testing for HW8
+//Josh Pedowitz and James Thornton
+
+YOCO():
+
+    yono #g @ yo!
+    int #x @ 2!
+    if (#x < 1):
+        #x @ #x +3!
+    else if (#x like 2):
+        #x @ #x - 13!
+        if (#g like yo):
+            #x @ #x + 3!
+        end!
+        if (yo):
+            #x @ #x + 1!
+        end!
+    else:
+        #x @ 10!
+        #x @ 2!
+    end!
+
+    int #y @ 3!
+
+    while (#y < 20) :
+        if ((yo and #g or not no) not like (yo and ((#g or #g)))):    
+            #x @ #x + 1!
+        end!
+        #y @ #y + 1!
+    end!
+    if (yo):
+        #x @ #x + 9001!
+    else if (no):
+        #x @ 14!
+    end!
+        
+
+end!

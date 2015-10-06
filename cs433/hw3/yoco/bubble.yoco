@@ -1,0 +1,41 @@
+// bubble.yoco
+// bubble sort of 5 integers
+
+swap(ref int #a, ref int #b): // swaps #a and #b, which are passed by reference
+    int #tmp @ #a!
+    #a @ #b!
+    #b @ #tmp!
+end!
+
+bubble(int[] #X, int #lo, int #hi): // sorts #X[#lo..#hi] using bubble sort
+    while #hi > #lo:
+        int #j @ #lo!
+        yono #changed? @ no!
+        while #j < #hi:
+            if #X[#j] > #X[#j+1]:
+                swap(#X[#j], #X[#j+1])!
+                #changed? @ yo!
+            end!
+            #j @ #j + 1!
+        end!
+        if not #changed?:
+            retweet!
+        end!
+        #hi @ #hi - 1!
+    end!
+end!
+
+YOCO():         // main program
+    int[1..5] #A!
+    #A[1] @  6!
+    #A[2] @ -2!
+    #A[3] @ 44!
+    #A[4] @  3!
+    #A[5] @  5!
+    bubble(#A, 1, 5)!
+    put(#A[1])! putc(' ')!
+    put(#A[2])! putc(' ')!
+    put(#A[3])! putc(' ')!
+    put(#A[4])! putc(' ')!
+    put(#A[5])! putc('\n')!
+end!

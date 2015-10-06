@@ -1,0 +1,989 @@
+/* resolve.c
+ *
+ * CS 433 - declaration resolution 
+ *
+ * 
+ * version for hw 6 - added handling of functions and parameters
+ * Took 12 hours
+ * James Thornton & Josh Pedowitz, Based on code by Daniel Scharstein
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include "symtab.h"
+#include "syntree.h"
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+/***********************************************************************
+ *  Global variables
+ */
+
+#define MAXDEPTH 100    /* Maximum allowed depth of scope nesting  */
+
+extern int errorcount;  /* keep track of number of errors */
+
+int curlevel;           /* Current scope nesting level */
+
+decldesc *scopestack[MAXDEPTH];  /* Stack of headers for lists of
+                                    declarations made in open scopes */
+
+typedesc *IntType, *BoolType;   /* pointers to typedescs for basic types */
+typedesc *IntArrType, *BoolArrType;  /* pointers to typedescs for array param types */
+
+decldesc *currentfundesc;        /* current function being processed        */
+int curdisp;                     /* keep track of current displacement      */
+int globalsize;                  /* total size of global variables required */
+
+/***********************************************************************
+ *  Utilities
+ */
+
+/* applytolist - Apply the function 'action' to each of the nodes in
+ *      some subtree that forms a list.
+ */
+void applytolist(node *listhead, void (*action)()) 
+{
+    for( ; listhead != NULL; listhead = listhead->internal.child[1])
+        action(listhead->internal.child[0]);
+}
+
+/* applytolist2 - Same as applytolist, except that it also passes a
+ *      parameter 'param' to 'action'.
+ */
+void applytolist2(node *listhead, void (*action)(), void *param) 
+{
+    for( ; listhead != NULL; listhead = listhead->internal.child[1])
+        action(listhead->internal.child[0], param);
+}
+
+/***********************************************************************
+ * Initialization of global variables for basic type descriptors
+ */
+
+void initialize_basic_typedescs()
+{
+    IntType = (typedesc *)malloc(sizeof(typedesc));
+    IntType->typespec = integer;
+    IntType->isArray = FALSE;
+	IntType->typesize = INTSIZE;
+    
+    BoolType = (typedesc *)malloc(sizeof(typedesc));
+    BoolType->typespec = bool;
+    BoolType->isArray = FALSE;
+	BoolType->typesize = BOOLSIZE;
+
+	
+    // also create typedescs for IntArrType and BoolArrType here
+    // (used when resolving array parameters)
+    // set their low and high bounds both to 0
+
+
+	IntArrType = (typedesc *)malloc(sizeof(typedesc));
+	IntArrType->typespec = integer;
+	IntArrType->isArray = TRUE;
+	IntArrType->lowbound = 0;
+	IntArrType->highbound = 0;
+	IntArrType->typesize = PTRSIZE;
+
+	BoolArrType = (typedesc *)malloc(sizeof(typedesc));
+	BoolArrType->typespec = bool;
+	BoolArrType->isArray = TRUE;
+	BoolArrType->lowbound = 0;
+	BoolArrType->highbound = 0;
+	BoolArrType->typesize = PTRSIZE;
+
+
+}
+
+/***********************************************************************
+ * Initialization of I/O functions
+ */
+
+/* create decldesc for I/O function */
+void makeIOfun(char *funName, char *paramName, typedesc *retType)
+{
+    STrec *STentr;
+    decldesc *iofundsc = (decldesc *)malloc(sizeof(struct fundesc));
+    decldesc *ioformaldsc = NULL;
+
+    if (paramName != NULL) {   /* putc, put functions have a parameter */
+        /* add the parameter name to the symbol table */
+        STentr = STlookup(paramName);
+        if (STentr == NULL)
+            STentr = STinsert(paramName);
+        STentr->declstack = NULL;
+
+        /* create a declaration descriptor for the formal parameter */
+        ioformaldsc = (decldesc *)malloc(sizeof(struct formaldesc));
+        ioformaldsc->formal.type = formaldecl;
+        ioformaldsc->formal.STentry = STentr;
+        ioformaldsc->formal.line = 0;
+        ioformaldsc->formal.levellink = NULL;
+        ioformaldsc->formal.level = 1;
+        ioformaldsc->formal.decllink = NULL;
+        ioformaldsc->formal.vartype = IntType;
+        ioformaldsc->formal.valparam = TRUE;
+        ioformaldsc->formal.formallink = NULL;
+		ioformaldsc->formal.vardisp = 0;
+    }
+
+    /* add the function name to the symbol table */
+    STentr = STlookup(funName);
+    if (STentr == NULL)
+        STentr = STinsert(funName);
+    STentr->declstack = iofundsc;
+
+    /* create a declaration descriptor for the function */
+    iofundsc->fun.type = fundecl;
+    iofundsc->fun.STentry = STentr;
+    iofundsc->fun.line = 0;
+    iofundsc->fun.levellink = NULL;
+    iofundsc->fun.level = 0;
+    iofundsc->fun.decllink = NULL;
+    iofundsc->fun.returntype = retType;
+    iofundsc->fun.formallist = ioformaldsc;
+	iofundsc->fun.localsize = 0;
+	if (iofundsc->fun.formallist) iofundsc->fun.paramsize = INTSIZE;
+	else iofundsc->fun.paramsize = 0;
+}
+
+void initialize_IOfuns()
+{
+    makeIOfun("getc", NULL, IntType);  /* int getc()  */
+    makeIOfun("get",  NULL, IntType);  /* int get()   */
+    makeIOfun("putc", "c",  NULL);     /* putc(int #c) */
+    makeIOfun("put",  "n",  NULL);     /* put(int #n)  */
+}
+
+/***********************************************************************
+ * Declaration processing
+ ***********************************************************************/
+ 
+/* insertdecl -- Insert a new declaration descriptor into the stack of
+ *      declarations associated with its identifier and the list of
+ *      all declarations made at the current level.  Create a pointer
+ *      from the Nident node to the new declaration descriptor.
+ *      Before inserting the new declaration, make sure that the
+ *      identifier was not previously defined in this scope.  If it
+ *      was, free its space and return NULL.  Otherwise, return a
+ *      pointer to the new declaration descriptor.
+ *
+ *      This function is called for three types of declarations:
+ *      variables, function names, and formal parameters.
+*/
+		/* 1. check for multiple declaration at same level
+       (print error message to stderr and return NULL if so) */
+
+    /* 2. set common fields (type, line, level) */
+
+    /* 3. set back pointer to ST record */
+
+    /* 4. insert into stack of declarations */
+
+    /* 5. insert into chain of levellinks */
+
+    /* 6. create pointer from identnode to new declaration descriptor */
+
+decldesc *insertdecl(decldesc *newdecl, decltype newdecltype, node *identnode)
+{
+    assert(identnode->ident.type == Nident);
+
+	//1
+	STrec *rec = identnode->ident.STentry;
+	decldesc *curdecl = rec->declstack;
+	
+	if ((curdecl != NULL) && (curdecl->unk.level == curlevel)) {
+		fprintf(stderr, "line %d. Identifier %s has already been declared.\n", identnode->ident.line, identnode->ident.STentry->lexptr);
+		free(newdecl);
+		errorcount++;
+		return NULL;
+	}
+	
+	
+
+	//2
+	newdecl->unk.type = newdecltype;
+	newdecl->unk.line = identnode->ident.line;
+	newdecl->unk.level = curlevel;
+
+	//3
+	newdecl->unk.STentry = rec;
+	
+	//4
+	newdecl->unk.decllink = rec->declstack;
+	rec->declstack = newdecl;
+	
+	//5
+	newdecl->unk.levellink = scopestack[curlevel];
+	scopestack[curlevel] = newdecl;
+
+	//6
+	identnode->ident.decl = newdecl;
+
+    return newdecl;
+}
+
+
+/***********************************************************************
+ *  Basic Function for resolving an identifier
+ */
+
+/* resolve_ident -- Attempt to resolve the declaration descriptor pointer
+ *      in an Nident node by setting it to the declstack pointer
+ *      stored in the node's symbol table entry.  If successful,
+ *      return the descriptor.  Otherwise, print an error message and
+ *      return NULL.
+ *
+ *      This function is called when USES of an identifier are encountered,
+ *      i.e., in statements and expressions.
+ */
+decldesc *resolve_ident(node *identnode)
+{
+    assert(identnode->ident.type == Nident);
+
+	if (identnode->ident.STentry->declstack) {	
+		identnode->ident.decl = identnode->ident.STentry->declstack;
+		return identnode->ident.decl;
+	} else {
+		errorcount++;
+		fprintf(stderr, "Line %d. Identifier %s not yet declared.\n",identnode->unk.line, identnode->ident.STentry->lexptr);	
+		return NULL;
+	}
+
+}
+
+
+/***********************************************************************
+ *  Types
+ */
+
+/* resolve_type -- Check that 'typenode' represents a valid type, i.e.,
+ *      either is 'Ntype' or 'Narraytype'.  In the former case, return
+ *      either IntType or BoolType; in the latter case, malloc a new
+ *      type descriptor, set the fields appropriately, and return it.
+ */
+typedesc *resolve_type(node *typenode)
+{
+	if (typenode->unk.type == Ntype){
+		if (typenode->type.typespec == integer) {
+			return IntType;
+		} else {
+			return BoolType;
+		} 
+	} else if (typenode->unk.type == Narraytype) {
+	
+		assert(typenode->internal.child[0]->unk.type == Ntype);
+		assert(typenode->internal.child[1]->unk.type == Nconst);
+		assert(typenode->internal.child[2]->unk.type == Nconst);
+		
+		typedesc *ArrayType = (typedesc *)malloc(sizeof(typedesc));
+		ArrayType->typespec = typenode->internal.child[0]->type.typespec;
+		ArrayType->isArray = TRUE;
+        ArrayType->lowbound = 0;
+		ArrayType->highbound = 0;
+
+        if (typenode->internal.child[1]->constant.val > typenode->internal.child[2]->constant.val) {
+            errorcount++;
+            fprintf(stderr,
+                    "line %d: Low array bound cannot be greater than high array bound\n",
+                    typenode->internal.line);
+        } else {
+        
+		ArrayType->lowbound = typenode->internal.child[1]->constant.val;
+		ArrayType->highbound = typenode->internal.child[2]->constant.val;
+
+		if(ArrayType->typespec == integer) ArrayType->typesize = (ArrayType->highbound - ArrayType->lowbound + 1)*INTSIZE;
+		else ArrayType->typesize = (ArrayType->highbound - ArrayType->lowbound + 1)*BOOLSIZE;
+        }
+
+		return ArrayType;
+		
+	} else {
+
+		assert(FALSE);
+		return NULL;
+
+	}
+
+}
+
+/***********************************************************************
+ *  Variable declarations
+ */
+
+/* prototype for function defined below */
+typedesc* resolve_expression(node *exprnode);
+
+/* resolve_singledecl -- Allocate a new 'vardesc' declaration
+ *      descriptor, set its 'vartype' field, and push it onto the
+ *      stack of declaration descriptors by calling 'insertdecl()'.
+ *      If initialized variable, also resolve the expression.
+ */
+void resolve_singledecl(node *declnode, typedesc *vartypedesc)
+{
+
+    /* also resolve the expression (child[1]) if there is one */
+    assert(declnode->internal.child[0]->unk.type == Nident);
+	decldesc *newvar = (decldesc *)malloc(sizeof(struct vardesc));
+
+	newvar->var.vartype = vartypedesc;
+
+	newvar->var.vardisp = curdisp;
+	
+
+	if(vartypedesc->isArray == TRUE) {
+		curdisp += PTRSIZE;
+	} else {
+		if(vartypedesc->typespec == integer) curdisp += INTSIZE;
+		else curdisp += BOOLSIZE;
+	}
+
+	insertdecl(newvar, vardecl, declnode->internal.child[0]);
+
+	if(declnode->internal.child[1]) {
+		if (declnode->internal.child[0]->ident.decl->unk.level == 0) {
+		fprintf(stderr, "Line %d. Global variables cannot be initialized.\n", declnode->unk.line);
+		errorcount++;
+		} else resolve_expression(declnode->internal.child[1]);
+	}
+
+}
+
+/* resolve_vardecl -- Process variable declarations, i.e., a bunch of
+ *      identifiers declared to be of a certain type.
+ */
+void resolve_vardecl(node *vardeclnode)
+{
+    node *typenode = vardeclnode->internal.child[0];
+    node *decllist = vardeclnode->internal.child[1];
+
+    typedesc *vartypedesc = resolve_type(typenode);
+  
+    applytolist2(decllist, resolve_singledecl, vartypedesc);
+}
+
+
+/***********************************************************************
+ *  Opening and closing scopes
+ */
+
+/* open new scope: increase curlevel, and initialize the scopestack at
+ * this level to NULL */
+void open_scope()
+{
+	curlevel +=1;
+	assert(curlevel < MAXDEPTH);
+	scopestack[curlevel] = NULL;
+
+}
+
+/* close_scope: pop all declarations made in current scope by following the
+ * current levellink-list, then decrease curlevel */
+void close_scope()
+{
+	decldesc* curdesc = scopestack[curlevel];
+	decldesc* nextdesc; 
+	decldesc* nextscope;
+	
+	
+	while (curdesc != NULL) {
+		nextdesc = curdesc->unk.levellink; //sets nextdesc to next descriptor in scope
+		nextscope = curdesc->unk.decllink; //sets nextscope descriptor in the next scope down
+		curdesc->unk.STentry->declstack = nextscope; //points the STrec to nextscope
+		curdesc = nextdesc; 
+		
+	}
+	curlevel -= 1;
+
+}
+
+/* prototype for forward declaration */
+void resolve_stmt(node *stmtnode);
+
+/* resolve_block: create new scope for statement lists in function bodies,
+ * if/elseif/else and while statements */
+void resolve_block(node *stmtlist)
+{
+    open_scope();
+    applytolist(stmtlist, resolve_stmt);
+    close_scope();
+}
+
+
+
+/*********************************************************************/
+ 
+/* Helper Functions */
+
+int check_type(basictype typematch, typedesc *type1, typedesc *type2, int acceptarray)
+{   if (type2){ //two types passed in
+	    if (!acceptarray && (type1->isArray || type2->isArray)) return FALSE; //checking if either is array
+    } else if (!acceptarray && type1->isArray) return FALSE; //one type passed in
+	if ((type1->typespec == typematch) && (type2 == NULL || type2->typespec == typematch)){//checking type
+		return TRUE;
+	}else{
+		return FALSE;
+	}
+}
+
+typedesc* expr_type(decldesc* desc) {
+    if (!desc) return NULL; //propogating errors
+	if (desc->unk.type == fundecl) {
+		return NULL; //functions return null
+	} else if (desc->unk.type == vardecl)
+			return desc->var.vartype;
+		else 
+			return desc->formal.vartype;
+}
+
+void check_conditional(typedesc *type, int line) {
+    if(!check_type(bool, type, NULL, FALSE)) {
+         errorcount++;
+         fprintf(stderr, "Line %d. Conditional must have a boolean value.\n", line);
+    }
+}
+
+/* resolve_actuals  -- Do declaration resolution and type checking for
+ *      the expressions and variables in an actual parameter list.
+ *      Pass in the function's decldesc and the line number of
+ *      the call for error messages.
+ */
+
+void resolve_actuals(node *actuallist, decldesc *ddsc, int linenum)
+{
+    decldesc* curformal;
+    node* actual = actuallist;
+    typedesc* type1;
+    typedesc* type2;
+    node* enode;
+    //If the function wasn't resolved correctly, return null and resolve the actual paramters
+    if (ddsc == NULL) applytolist(actuallist, (void (*)()) resolve_expression);
+    else{
+        curformal = ddsc->fun.formallist;
+        //If the function accepts no parameters, but it was called with parameters, increment errorcount 
+        //and resolve the actuals        
+        if (curformal == NULL && actual != NULL){
+            errorcount++;
+            fprintf(stderr, "Line %d. Too many parameters provided in function call.\n", linenum);
+            applytolist(actuallist, (void (*)()) resolve_expression);
+        }else {
+        //Otherwise, follow the list of formals
+            do{
+                // If there are no more actuals, but there are still formals, produce the appropriate error
+                if (actual == NULL){
+                    if (curformal != NULL) {
+                        errorcount++;
+                        fprintf(stderr, "Line %d. Too few parameters provided in function call.\n", linenum);
+                        curformal = NULL;
+                    }                  
+                } else {
+                // Otherwise (there are still actuals and formals remaining)
+                    type1 = curformal->formal.vartype;
+                    enode = actual->internal.child[0];
+                    type2 = resolve_expression(enode);
+                    // Make sure type2 was resolved correctly
+                    if (type2 != NULL) {
+                        // If the current formal is pass by reference but the actual is not an ident or array, produce an error
+                        if((curformal->formal.valparam == 0) && !((enode->unk.type == Nident) || (enode->unk.type == Narray))) {
+                            errorcount++;
+                            fprintf(stderr, "Line %d. Pass-by-reference parameter must be assignable.\n", linenum);
+                        }
+                        //If the actual and formal have different types, or one is an array and the other not, error 
+                        if(!(check_type(integer, type1, type2, TRUE) || check_type(bool, type1, type2, TRUE))){
+                            errorcount++;
+                            fprintf(stderr, "Line %d. Function call params must match declared params.\n", linenum);
+                        }else if(type1->isArray != type2->isArray){
+                                errorcount++;
+                                fprintf(stderr, "Line %d. Function call params must match declared params.\n", linenum);
+                        }
+                    }
+                    //If possible to update actual and curformal, do so. Otherwise, NULL.
+                    if (actual->internal.child[1] == NULL) actual = NULL;
+                    else  actual = actual->internal.child[1];
+                    if (curformal->formal.formallink == NULL) curformal = NULL;
+                    else curformal = curformal->formal.formallink;
+                }
+            //Continue looping as long as there are curformals remaining to process.
+            } while(curformal != NULL);
+            //If there are no more curformals, but there are still actuals left unprocessed, produce an error and process them
+            if(actual !=NULL) {
+                errorcount++;
+                fprintf(stderr, "Line %d. Too many parameters provided in function call.\n", linenum);
+                applytolist(actuallist, (void (*)()) resolve_expression);
+            }
+        }
+    }
+}
+
+/* declaration resolution for an expression: variable (Nident,
+ * Narray), Nconst, Nfuncall, unary ops (Nnot, Nneg), and binary ops
+ * (Nor, Nand, Nlt, Ngt, Neq, Nle, Nge, Nne, Nplus, Nminus, Ntimes,
+ * Ndiv, Nmod).
+ */
+typedesc* resolve_expression(node *exprnode)
+{
+
+    nodetype etype = exprnode->unk.type;
+    node *node0 = exprnode->internal.child[0];
+    node *node1 = exprnode->internal.child[1];
+	typedesc* type1;
+	typedesc* type2;
+	decldesc * newdecl;  
+
+    switch (etype) {
+    case Nident:
+		newdecl = resolve_ident(exprnode);
+        //check if the node was resolved correctly
+        if(!newdecl) return NULL;
+        type1 = expr_type(newdecl);
+        //check if the node was a function node
+		if (type1 == NULL) {
+            errorcount++;
+            fprintf(stderr, "Line %d. Expected variable, found function.\n", exprnode->unk.line);
+			return NULL;
+		} else return type1;
+
+    case Narray:
+		type1 = expr_type(resolve_ident(node0));
+        //check if the node's type resolved to array
+		if (!type1->isArray){ 
+
+			errorcount++;
+			fprintf(stderr, "Line %d. Subscripted variable must be an array.\n", node0->unk.line);
+        }
+        //check if the index is an integer
+		type2 = resolve_expression(node1);
+		if (!check_type(integer, type2, NULL, FALSE)){
+			errorcount++;
+			fprintf(stderr, "Line %d. Array index must be an integer.\n", node0->unk.line);
+			return NULL;
+		}
+        //return the array's type
+        if (type1->typespec == integer) return IntType;
+        else return BoolType;
+
+    case Nconst:
+		if(exprnode->constant.typespec == integer) return IntType;
+		else return BoolType;
+
+    case Nfuncall:
+        newdecl = resolve_ident(node0);
+        //check if the Ident Node was resolved correctly
+        if(newdecl == NULL) {
+            resolve_actuals(node1, NULL, node0->unk.line);
+            return NULL;
+        //passing case
+        } else if (newdecl->unk.type == fundecl) {
+        	resolve_actuals(node1, newdecl, node0->unk.line);
+			return newdecl->fun.returntype;
+        //funcall wasn't actually a function
+		} else {
+			errorcount++;
+			fprintf(stderr, "Line %d. Function call must refer to a function.\n", node0->unk.line);
+            resolve_actuals(node1, NULL, node0->unk.line); 
+			return NULL;
+		}
+	
+	case Nnot:
+		type1 = resolve_expression(node0);
+		if (!type1) return NULL;
+		else if (check_type(bool, type1, NULL, FALSE)) return type1;
+		else {
+			errorcount++;
+			fprintf(stderr, "Line %d. Not operator requires a boolean.\n", node0->unk.line);
+			return NULL;
+		}
+
+	case Nneg:
+		type1 = resolve_expression(node0);
+		if (!type1) return NULL;
+		if (check_type(integer, type1, NULL, FALSE)) return type1;
+		else {
+			errorcount++;
+			fprintf(stderr, "Line %d. Negation requires an integer.\n", node0->unk.line);
+			return NULL;
+		}
+
+	case Nor:
+
+	case Nand:
+		type1 = resolve_expression(node0);
+		type2 = resolve_expression(node1);
+		if (!type1 || !type2) return NULL;
+		else if (check_type(bool, type1, type2, FALSE)) return BoolType;
+		else {
+			errorcount++;
+			fprintf(stderr, "Line %d. And and Or operators require two booleans.\n", node0->unk.line);
+			return NULL;
+		}
+
+	case Nlt:
+
+	case Ngt:
+
+	case Nle:
+
+	case Nge:
+		type1 = resolve_expression(node0);
+		type2 = resolve_expression(node1);
+		if (!type1 || !type2) return NULL;
+		else if (check_type(integer, type1, type2, FALSE)) return BoolType;
+		else {
+			errorcount++;
+			fprintf(stderr, "Line %d. Comparison operators require two integers.\n", node0->unk.line);
+			return NULL;
+		}
+	case Neq:
+		
+	case Nne:
+		type1 = resolve_expression(node0);
+		type2 = resolve_expression(node1);
+		if (!type1 || !type2){
+			return NULL;
+		}
+		else if (check_type(integer, type1, type2, FALSE)) return BoolType;
+		else if (check_type(bool, type1, type2, FALSE)) return BoolType;
+		else {
+			errorcount++;
+			fprintf(stderr, "Line %d. Equality operators require equal types.\n", node0->unk.line);
+			return NULL;
+		}
+
+	case Nplus:
+
+	case Nminus:
+
+	case Ntimes:
+
+	case Ndiv:
+
+	case Nmod:
+		type1 = resolve_expression(node0);
+		type2 = resolve_expression(node1);
+		if (!type1 || !type2) return NULL;
+		else if (check_type(integer, type1, type2, FALSE)) return type1;
+		else {
+			errorcount++;
+			fprintf(stderr, "Line %d. Basic arithmetic operators require two integers.\n", node0->unk.line);
+			return NULL;
+		}
+         
+        /* call resolve_expressions on all subexpressions.
+         */
+    
+    default:
+        assert(FALSE); /* should never get here */
+    }
+  
+}
+
+/********************************************************************/
+
+/* declaration resolution for a statement: vardecl, assign, funcall,
+ * return, if/elseif/else, or while
+ */
+void resolve_stmt(node *stmtnode)
+{
+
+    node *node0 = stmtnode->internal.child[0];
+    node *node1 = stmtnode->internal.child[1];
+    node *node2 = stmtnode->internal.child[2];
+	decldesc* newdecl;
+    typedesc* type1;
+	typedesc* type2;
+
+    switch (stmtnode->internal.type) {
+	
+    case Nvardecl:
+        resolve_vardecl(stmtnode);
+        break;
+    
+        /* call resolve_stmt or resolve_expression
+         * on all (non-NULL) "substatements" and  subexpressions; for
+         * stmtlists in if/elseif/else and while, call resolve_block.
+         */
+
+	case Nassign:
+		type1 = resolve_expression(node0);
+		type2 = resolve_expression(node1);
+
+        //check if either node resolution caused an error
+		if (!type1 || !type2){
+            if (node1->unk.type == Nfuncall) {
+                //node1 has no return type
+                if (node1->internal.child[0]->ident.decl->fun.returntype == NULL) {
+                    errorcount++;
+                    fprintf(stderr, "Line %d. Cannot assign void function call to variable.\n", node0->unk.line);
+                }
+            }
+			break;
+        //check if type1 and type 2 are the same
+		} else if (!(check_type(integer, type1, type2, FALSE) ||
+                   check_type(bool, type1, type2, FALSE))) {
+			errorcount++;
+			fprintf(stderr, "Line %d. Incompatible types in assignment statement.\n", node0->unk.line); 
+        }
+		break;
+
+	case Nfuncall:
+		newdecl = resolve_ident(node0);
+        //check if node0 resolved correctly
+		if(newdecl == NULL) {
+            resolve_actuals(node1, NULL, node0->unk.line);
+        //passing case
+        } else if (newdecl->unk.type == fundecl) {
+        	resolve_actuals(node1, newdecl, node0->unk.line);
+        //funcall node wasn't actually a function
+		} else {
+			errorcount++;
+			fprintf(stderr, "Line %d. Function call must refer to a function.\n", node0->unk.line);
+            resolve_actuals(node1, NULL, node0->unk.line);
+		}
+        break;
+
+	case Nreturn:
+        type2 = currentfundesc->fun.returntype;
+		if(node0){
+            type1 = resolve_expression(node0);
+            if (type2 == NULL) { // void rettype
+                errorcount++;
+                fprintf(stderr, "Line %d. Void functions cannot return anything.\n", node0->unk.line);
+            } else { // non void
+                
+                if (type2->isArray) {
+                    if (!(check_type(type2->typespec, type1, NULL, TRUE) && type1->isArray)){
+                        errorcount++;
+                        fprintf(stderr, "Line %d. Return statement does not match return type.\n", node0->unk.line);
+                    }
+                }else{ // not array rettype
+                    if (!check_type(type2->typespec, type1, NULL, FALSE)){
+                        errorcount++;
+                        fprintf(stderr, "Line %d. Return statement does not match return type.\n", node0->unk.line);
+                    }
+                }
+            }
+        } else if (type2 != NULL){ //return type exists
+            errorcount++;
+            fprintf(stderr, "Line %d. Non void functions must return something.\n", stmtnode->unk.line);
+            break;
+        }
+		break;
+
+	case Nif:
+
+	case Nelseif:
+		type1 = resolve_expression(node0);
+		check_conditional(type1, node0->unk.line);
+		resolve_block(node1);	
+		if(node2){ resolve_stmt(node2);}
+		break;	
+
+	case Nelse:
+		resolve_block(node0);
+		break;
+
+	case Nwhile:
+        type1 = resolve_expression(node0);
+		check_conditional(type1, node0->unk.line);
+		resolve_block(node1);
+		break;        
+
+    default:
+        assert(FALSE); /* should never get here */
+    }
+}
+
+
+
+/***********************************************************************
+ *  Functions and formal parameters
+ */
+
+
+/* resolve_formallist -- recursive procedure to resolve a list of
+ *      formal parameters.  We're not using applytolist here, because
+ *      all formal parameters need to be chained together via the
+ *      'formallink' pointers.  Returns the first param's decldesc.
+ */
+decldesc *resolve_formallist(node *paramlist)
+{
+	if (paramlist == NULL) {
+        return NULL;
+    } else {
+        node *param = paramlist->internal.child[0];
+        node *restoflist = paramlist->internal.child[1];
+
+        node *paramtype = param->internal.child[0];
+        node *paramid = param->internal.child[1];
+  
+        typedesc *paramtypedesc = resolve_type(paramtype);
+        decldesc *newdecl, *result, *nextdecl;
+
+        /* if array parameter, use the correct type descriptor: */
+        if (param->internal.type == Narrparam) {
+            if (paramtypedesc == IntType)
+                paramtypedesc = IntArrType;
+            else
+                paramtypedesc = BoolArrType;
+			
+        }
+        
+        /* 1. allocate a new decl desc for a formal parameter, set its
+         *    specific fields, call insertdecl and store the result.
+         */
+        newdecl = (decldesc *) malloc(sizeof(struct formaldesc));
+        newdecl->formal.vartype = paramtypedesc;
+        newdecl->formal.valparam = (param->internal.type == Nvalparam);
+		newdecl->formal.vardisp = curdisp;
+
+		curdisp += paramtypedesc->typesize;
+
+        result = insertdecl(newdecl, formaldecl, paramid);
+
+        /*  2. Recursively process the rest of the formals and store the
+         *     pointer to the next decldesc.
+         */
+        nextdecl = resolve_formallist(restoflist);
+
+        /* 3. If insertdecl didn't return NULL (i.e. no error), set the
+         *     formallink pointer to the next decldesc (the result of the
+         *     recursive call).
+         */
+        if (result != NULL)
+            newdecl->formal.formallink = nextdecl;
+
+        /* 4. Return the result of insertdecl (the current decldesc or NULL)
+         */
+        return result;
+    }
+}
+
+/* In first pass, only create declaration descriptor for the function
+ * name and the formal parameters, so that all function headers in
+ * entire program are known by the time function calls are processed
+ * in the second pass.
+ */
+void resolve_funheader(node *funnode)
+{
+	assert(funnode->internal.type == Nfundecl);
+
+		node *rettype = funnode->internal.child[0];
+		node *funname = funnode->internal.child[1];
+		node *funformals = funnode->internal.child[2];
+		typedesc *rettypedesc = NULL;
+		decldesc *newfundec, *firstformaldec;
+
+		if (rettype != NULL)
+		    rettypedesc = resolve_type(rettype);
+		
+		/* Allocate a new decldesc for the function, set its specific
+		 * fields, and call insertdecl.  Note that if insertdecl returns
+		 * NULL (error), funname doesn't get resolved, i.e. its decl
+		 * pointer is NULL when we process the body in the second pass.
+		 */
+	   
+		newfundec = (decldesc *)malloc(sizeof(struct fundesc));
+		newfundec->fun.returntype = rettypedesc;
+
+		insertdecl(newfundec, fundecl, funname);
+
+		/* now process formals */
+		
+		open_scope();
+		
+		/* resolve the list of formals and store the pointer to the first
+		 * formal's decldesc in the function's decldesc formallist field.
+		 */
+		curdisp = 0;
+		firstformaldec = resolve_formallist(funformals);
+		
+		if (newfundec != NULL) { /* could be NULL if error (multiply declared) */
+		    newfundec->fun.formallist = firstformaldec;
+			newfundec->fun.paramsize = curdisp;
+		}
+		
+		close_scope(); /* remove formals from the declstacks */
+}
+
+/* In second pass, process each function body: open the scope again
+ * and add the exisiting decldescs for the formal parameters to
+ * declstacks and levellinks again, then process the statements, and
+ * finally close the scope again.
+ */
+void resolve_funbody(node *funnode)
+{
+	currentfundesc = funnode->internal.child[1]->ident.decl;
+
+    node *funname = funnode->internal.child[1];
+    node *funstmts = funnode->internal.child[3];
+
+    decldesc *newfundec = funname->ident.decl;
+    decldesc *curformal;
+
+    open_scope();
+
+    if (newfundec != NULL) {
+        /* add formals to scope again */
+        for (curformal = newfundec->fun.formallist; curformal != NULL;
+             curformal = curformal->formal.formallink) {
+            /* do the relevant steps of "insertdecl" manually: */
+
+            /* 4. insert into stack of declarations */
+            curformal->unk.decllink = curformal->unk.STentry->declstack;
+            curformal->unk.STentry->declstack = curformal;
+
+            /* 5. insert into chain of levellinks */
+            curformal->unk.levellink = scopestack[curlevel];
+            scopestack[curlevel] = curformal;
+        }
+    }
+
+	curdisp = 0;
+
+    /* call resolve_stmt on each statement in the body */
+    applytolist(funstmts, resolve_stmt);
+
+	if (currentfundesc != NULL) currentfundesc->fun.localsize = curdisp;
+
+    close_scope();
+}
+  
+
+/***********************************************************************
+ *  Top-level routine
+ */
+
+/* resolve  --  Do declaration resolution for the entire program.
+ * For now, only resolve global and local variables (not functions or parameters)
+ */
+void resolve(node *syntree)
+{
+
+    initialize_basic_typedescs();
+	initialize_IOfuns();
+  
+    if (syntree == NULL) {
+        errorcount = 1;
+    } else {
+        node *globlist = syntree->internal.child[0];
+        node *funlist = syntree->internal.child[1];
+
+        errorcount = 0;
+        curlevel = 0;       /* initialize current nesting level */
+        scopestack[curlevel] = NULL;  /* initialize list of declarations
+                                       * made in current scope */
+		curdisp = 0;
+        applytolist(globlist, resolve_vardecl);
+		globalsize = curdisp;
+		applytolist(funlist, resolve_funheader);
+        applytolist(funlist, resolve_funbody);
+
+    }
+}

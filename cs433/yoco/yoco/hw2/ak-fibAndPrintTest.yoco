@@ -1,0 +1,40 @@
+/* 	fibAndPrintTest.yoco - test program for hw 2
+	fib(): takes in a number, outputs that element in the fibonacci sequence with fib(0)=1 and fib(1)=1.
+	print(): takes in an array of characters, their lowest index, and their highest index and prints them all in order. */
+
+YOCO():
+	int[0..3] #toPrint!
+	#toPrint[0] @  'n'!
+    #toPrint[1] @  'u'!
+    #toPrint[2] @  'm'!
+    #toPrint[3] @  '?'!
+    print(#toPrint, 0, 3)!
+    int #a @ get()!
+   	int #b @ fib(#a)!
+   	#toPrint[3] @ ':'!
+   	print(#toPrint, 0, 3)!
+    put(#b)!
+end!
+
+int fib(int #num):
+	if #num < 2:
+		retweet 1!
+	int #low @ 1!
+	int #high @ 1!
+	int #index @ 1!
+	while #index < #num:
+		int #temp @ #high!
+		#high @ #low + #high!
+		#low @ #temp!
+		#index @ #index + 1!
+	end!
+	retweet #high!
+end!
+
+print(int[] #string, int #low, int #high):
+	int #index @ #low!
+	while #index <= #high:
+		putc(#string[#index])!
+		#index @ #index + 1!
+	end!
+end!

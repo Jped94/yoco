@@ -1,0 +1,25 @@
+// testhw21.yoco - test program for hw 2
+// Is Prime
+
+bool isPrime(int #a):
+	int #i @ 2!
+	while #i < #a:
+		if #a % #i:
+			retweet 0!
+		end!
+		#i @ #i+1
+	end!
+	retweet 1!
+end!
+
+YOCO():
+	putc('?')!
+	int #a @ get()!
+	if isPrime(#a) like 1:
+		putc('T')! putc('r')! putc('u')! putc('e')!
+	end!
+	else:
+		putc('F')! putc('a')! putc('l')! putc('s')! putc('e')!
+	end!
+end!
+

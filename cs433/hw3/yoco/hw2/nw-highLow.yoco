@@ -1,0 +1,48 @@
+/*
+ * nw-highlow.yoco
+ */
+
+global int #mystery??? @ 50004!
+
+yono guess(int #guess):
+	if #guess > #mystery???:
+		putc('2')!
+		putc(' ')!
+		putc('H')!
+		putc('I')!
+		putc('G')!
+		putc('H')!
+		putc('!')!
+		putc('\n')!
+	end!
+	if #guess < #mystery???:
+		putc('2')!
+		putc(' ')!
+		putc('L')!
+		putc('O')!
+		putc('W')!
+		putc('!')!
+		putc('\n')!
+	end!
+	retweet #guess like #mystery???!
+end!
+
+YOCO():
+	putc('?')!
+	putc('\n')!
+
+	while (not guess(get())):
+		putc('\n')!
+	end!
+
+	putc('Y')!
+	putc('o')!
+	putc('u')!
+	putc(' ')!
+	putc('w')!
+	putc('o')!
+	putc('n')!
+	putc('!')!
+	putc('\n')!
+end!
+

@@ -1,0 +1,52 @@
+//Sieve of Eratosthenes 
+//Print primes up to 8209
+YOCO():
+    int limit @ 1500000!
+    int prime @ 1030!
+    int i,j!
+    int numbers[0..limit]!
+    int primes[0..prime]!
+
+    /*fill the array with natural numbers*/
+    i @ 0!
+    while (i<limit):
+        numbers[i] @ i+2!
+        i @ i + 1!
+    end!
+
+    /*sieve the non-primes*/
+    i = 0;
+    while (i<limit):
+        if (numbers[i] not like -1):
+            j @ 2*numbers[i]-2!
+            while (j<limit):
+                numbers[j] @ -1!
+                j @ j + numbers[i]!
+            end!
+        end!
+        i @ i + 1!
+
+    end!
+
+    /*transfer the primes to their own array*/
+    j = 0;
+    i = 0;
+    while (i<limit and j<prime):
+        if (numbers[i]!=-1):
+            j @ j + 1!
+            primes[j] @ numbers[i]!   
+        end!
+        i @ i + 1!
+    end!
+
+    /*print*/
+    i @ 0!
+    while (i<prime):
+        putc(primes[i])!
+        putc(",")!
+        putc(" ")!
+        i @ i + 1!
+    end!
+
+end!
+

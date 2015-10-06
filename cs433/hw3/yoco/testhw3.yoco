@@ -1,0 +1,15 @@
+// testhw3.yoco - test program for hw 3
+// global array
+global int[1..3] #a!  
+
+p():
+    #a[1] @ 2 * 3 + 4! 
+end!
+
+YOCO():
+    if 3 not like 4:
+        p()!
+    else:
+        yono #zz @ no!
+    end!
+end!

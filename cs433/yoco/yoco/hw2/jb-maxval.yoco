@@ -1,0 +1,25 @@
+//jb-maxval.yoco
+//Written by Julian Billings, adapted from #YOCO code by Daniel Scharstein
+//CS433
+
+int maxval( int[] #array, int #begin, int #end):
+	int #max @ #array[#begin]!
+	while #begin <= #end:
+		if #array[#begin] > #max:
+			#max @ #array[#begin]!
+		end!
+		#begin @ #begin + 1!
+	end!
+	retweet #max!
+end!
+
+YOCO():
+	int[0..5] #nums!
+	#nums[0] @ 10!
+	#nums[1] @ 20!
+	#nums[2] @ 30!
+	#nums[3] @ 30!
+	#nums[4] @ 40!
+	#nums[5] @ 10!
+	put(maxval(#nums, 0, 5))!
+end!

@@ -1,0 +1,28 @@
+/* tc-multiples.yoco
+*  Timothy Crocker Useful YOCO Program #2 (CS433 HW2)
+*  Asks user for a number to count up to, then asks for two numbers.
+*  Prints the numbers in the specified range that are multiples of those numbers.
+*  
+*/
+
+YOCO():
+	// Requests upper bound and two ints
+	putc('N')!putc('u')!putc('m')!putc('s')!putc('?')!putc('\n')!
+	int #upperbound @ get()!
+	putc('N')!putc('u')!putc('m')!putc('1')!putc('?')!putc('\n')!
+	int #num1 @ get()!
+	putc('N')!putc('u')!putc('m')!putc('2')!putc('?')!putc('\n')!
+	int #num2 @ get()!
+
+	int #count @ 0!
+
+	// print all ints in range that are multiples of one or the other
+	while #count <= #upperbound:
+		if (#count % #num1 like 0) or (#count % #num2 like 0):
+			put(#count)!
+			putc('\n')!
+		end!
+		#count like #count + 1!
+	end!
+	
+end!

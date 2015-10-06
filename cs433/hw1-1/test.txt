@@ -1,0 +1,3 @@
+HDR = symtab.h
+SRC = main.c symtab.c
+OBJ = main.o symtab.o

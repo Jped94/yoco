@@ -1,0 +1,18 @@
+// testhw6.yoco - test program for hw 6
+// tests displacements
+global int[3..6] #x!
+global yono #b!
+
+int f(int #c):
+    retweet #c+1!
+end!
+
+p(ref int #b, yono #r, int[] #s):
+    int #a!
+    #b @ 5!
+end!
+
+YOCO():
+    yono[0..7] #d!
+    int #e!
+end!

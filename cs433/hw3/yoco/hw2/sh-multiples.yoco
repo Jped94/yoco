@@ -1,0 +1,17 @@
+// sh-multiples3and5.yoco
+// Sam Hage
+// finds the sum of the numbers under n that are multiples of 3 or 5
+
+YOCO(int #n):
+	int #sum @ 0!
+    int #i @ 0!
+    while (#i <= #n):
+        if i%3 like 0 or i%5 like 0:
+            #sum @ #sum + #i!
+    retweet #sum!
+end!
+
+/* Multi-line
+comment. Should be
+ignored by
+scanner. */

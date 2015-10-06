@@ -1,0 +1,101 @@
+[jpedowitz@snake hw5]$ ./yococo -t ~schar/cs433/yoco/gcd.yoco
+#line   5: program (2)
+#             NULL node
+#line   5:    funlist 
+#line   5:       fundecl (4)
+#line   5:          type = int
+#line   5:          ident = gcd : Declared at line 5
+#line   5:          paramlist 
+#line   5:             valparam (2)
+#line   5:                type = int
+#line   5:                ident = a : Declared at line 5
+#line   5:             valparam (2)
+#line   5:                type = int
+#line   5:                ident = b : Declared at line 5
+#line   6:          stmtlist 
+#line   6:             if (3)
+#line   6:                gt (2)
+#line   6:                   ident = b : Declared at line 5
+#line   6:                   ident = a : Declared at line 5
+#line   7:                stmtlist 
+#line   7:                   return (1)
+#line   7:                      funcall (2)
+#line   7:                         ident = gcd : Declared at line 5
+#line   7:                         exprlist 
+#line   7:                            ident = b : Declared at line 5
+#line   7:                            ident = a : Declared at line 5
+#line   8:                elf (3)
+#line   8:                   eq (2)
+#line   8:                      ident = b : Declared at line 5
+#line   8:                      const = 0
+#line   9:                   stmtlist 
+#line   9:                      return (1)
+#line   9:                         ident = a : Declared at line 5
+#line  10:                   else (1)
+#line  11:                      stmtlist 
+#line  11:                         return (1)
+#line  11:                            funcall (2)
+#line  11:                               ident = gcd : Declared at line 5
+#line  11:                               exprlist 
+#line  11:                                  ident = b : Declared at line 5
+#line  11:                                  mod (2)
+#line  11:                                     ident = a : Declared at line 5
+#line  11:                                     ident = b : Declared at line 5
+#line  15:       fundecl (4)
+#                   NULL node
+#line  15:          ident = YOCO : Declared at line 15
+#                   NULL node
+#line  16:          stmtlist 
+#line  16:             funcall (2)
+#line  16:                ident = putc : Declared at line 0
+#line  16:                exprlist 
+#line  16:                   const = 63
+#line  17:             vardecl (2)
+#line  17:                type = int
+#line  17:                decllist 
+#line  17:                   decl (2)
+#line  17:                      ident = x : Declared at line 17
+#line  17:                      funcall (2)
+#line  17:                         ident = get : Declared at line 0
+#                                  NULL node
+#line  18:             funcall (2)
+#line  18:                ident = putc : Declared at line 0
+#line  18:                exprlist 
+#line  18:                   const = 63
+#line  19:             vardecl (2)
+#line  19:                type = int
+#line  19:                decllist 
+#line  19:                   decl (2)
+#line  19:                      ident = y : Declared at line 19
+#line  19:                      funcall (2)
+#line  19:                         ident = get : Declared at line 0
+#                                  NULL node
+#line  20:             funcall (2)
+#line  20:                ident = putc : Declared at line 0
+#line  20:                exprlist 
+#line  20:                   const = 71
+#line  20:             funcall (2)
+#line  20:                ident = putc : Declared at line 0
+#line  20:                exprlist 
+#line  20:                   const = 67
+#line  20:             funcall (2)
+#line  20:                ident = putc : Declared at line 0
+#line  20:                exprlist 
+#line  20:                   const = 68
+#line  20:             funcall (2)
+#line  20:                ident = putc : Declared at line 0
+#line  20:                exprlist 
+#line  20:                   const = 61
+#line  21:             funcall (2)
+#line  21:                ident = put : Declared at line 0
+#line  21:                exprlist 
+#line  21:                   funcall (2)
+#line  21:                      ident = gcd : Declared at line 5
+#line  21:                      exprlist 
+#line  21:                         ident = x : Declared at line 17
+#line  21:                         ident = y : Declared at line 19
+#line  21:             funcall (2)
+#line  21:                ident = putc : Declared at line 0
+#line  21:                exprlist 
+#line  21:                   const = 10
+

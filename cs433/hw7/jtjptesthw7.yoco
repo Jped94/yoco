@@ -1,0 +1,17 @@
+//Test Program for hw7
+
+YOCO():
+    yono[0..1000] #y!
+
+    int #x!
+    #x @ 2!
+    yono #j @ no!
+    int #g, #h @ 8!
+    #g @ #h / #x + #x * -#g % 8!
+    #y[2*#h + #g] @ #j!
+    #y[2] @ #j!
+    #y[3] @ yo!
+    #h @ 2 + 5 / 6 + #g!
+end!
+
+
